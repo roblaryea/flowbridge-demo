@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowBridge - Global Settlement Protocol | Investor Demo v4</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#06080d;--bg2:#0d1117;--bg3:#161b22;--bg4:#21262d;--accent:#58a6ff;--accent2:#79c0ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;--purple:#a371f7;--pink:#f778ba;--cyan:#39d353;--text:#e6edf3;--text2:#8b949e;--text3:#484f58;--border:rgba(48,54,61,0.8);--glass:rgba(13,17,23,0.85)}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.ambient{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 100% 80% at 50% -30%,rgba(88,166,255,0.08),transparent),radial-gradient(ellipse 60% 60% at 100% 50%,rgba(63,185,80,0.04),transparent)}
+.demo-bar{position:fixed;top:0;left:0;right:0;background:linear-gradient(90deg,#161b22,#0d1117);border-bottom:1px solid var(--border);padding:10px 20px;z-index:1000;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.demo-bar-left{display:flex;align-items:center;gap:12px}
+.demo-bar-right{display:flex;align-items:center;gap:10px}
+.demo-logo{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.demo-bar select{background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 12px;font-size:12px;font-family:inherit;cursor:pointer}
+.live-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);border-radius:20px;font-size:11px;font-family:'JetBrains Mono',monospace}
+.live-dot{width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(63,185,80,0.4)}50%{opacity:0.8;box-shadow:0 0 0 8px rgba(63,185,80,0)}}
+.reset-btn,.guided-btn,.scenario-btn,.replay-btn,.mode-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text2);padding:8px 12px;font-size:11px;font-family:inherit;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px}
+.reset-btn:hover,.guided-btn:hover,.scenario-btn:hover,.replay-btn:hover,.mode-btn:hover{background:var(--bg4);color:var(--text);border-color:var(--accent)}
+.guided-btn{background:linear-gradient(135deg,var(--purple),var(--pink));border:none;color:#fff}
+.guided-btn.active{box-shadow:0 0 0 2px var(--purple)}
+.replay-btn{background:linear-gradient(135deg,var(--green),var(--cyan));border:none;color:#fff}
+.scenario-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff}
+.mode-btn.free{background:linear-gradient(135deg,var(--yellow),#f59e0b);border:none;color:#000}
+.savings-ticker{background:linear-gradient(135deg,rgba(63,185,80,0.15),rgba(57,211,83,0.1));border:1px solid rgba(63,185,80,0.3);border-radius:8px;padding:6px 12px;font-size:11px;display:flex;align-items:center;gap:6px}
+.savings-ticker .value{font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace}
+.app{display:flex;min-height:100vh;padding-top:52px}
+.sidebar{width:260px;background:var(--glass);backdrop-filter:blur(20px);border-right:1px solid var(--border);position:fixed;top:52px;left:0;bottom:0;overflow-y:auto;z-index:100}
+.sidebar-header{padding:24px 20px;border-bottom:1px solid var(--border);text-align:center}
+.sidebar-avatar{width:72px;height:72px;border-radius:16px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff}
+.sidebar-name{font-size:16px;font-weight:600;margin-bottom:4px}
+.sidebar-role{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px}
+.sidebar-badges{display:flex;justify-content:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+.sidebar-nav{padding:16px 12px}
+.nav-section{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:12px 12px 8px;margin-top:8px}
+.nav-btn{display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;background:transparent;border:none;color:var(--text2);font-size:13px;font-family:inherit;border-radius:10px;cursor:pointer;transition:all 0.2s;text-align:left;position:relative}
+.nav-btn:hover{background:rgba(255,255,255,0.03);color:var(--text)}
+.nav-btn.active{background:linear-gradient(135deg,rgba(88,166,255,0.15),rgba(63,185,80,0.1));color:var(--text);border:1px solid rgba(88,166,255,0.2)}
+.nav-btn-icon{font-size:18px;width:24px;text-align:center}
+.nav-btn-badge{position:absolute;right:12px;background:var(--red);color:#fff;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600}
+.main{flex:1;margin-left:260px;display:flex}
+.content{flex:1;padding:24px;min-width:0}
+.notif-panel{width:300px;background:var(--glass);backdrop-filter:blur(20px);border-left:1px solid var(--border);padding:20px;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto}
+@media(max-width:1200px){.notif-panel{display:none}.main{margin-left:0}.sidebar{transform:translateX(-100%)}}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:600;text-transform:uppercase}
+.badge-bronze{background:linear-gradient(135deg,#78350f,#92400e);color:#fef3c7}
+.badge-silver{background:linear-gradient(135deg,#374151,#4b5563);color:#f3f4f6}
+.badge-gold{background:linear-gradient(135deg,#b45309,#d97706);color:#fef3c7}
+.badge-platinum{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
+.badge-success{background:rgba(63,185,80,0.15);color:var(--green);border:1px solid rgba(63,185,80,0.3)}
+.badge-warning{background:rgba(210,153,34,0.15);color:var(--yellow);border:1px solid rgba(210,153,34,0.3)}
+.badge-danger{background:rgba(248,81,73,0.15);color:var(--red);border:1px solid rgba(248,81,73,0.3)}
+.badge-info{background:rgba(88,166,255,0.15);color:var(--accent);border:1px solid rgba(88,166,255,0.3)}
+.badge-premium{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff}
+.badge-new{background:rgba(163,113,247,0.2);color:var(--purple);border:1px solid rgba(163,113,247,0.4);animation:badgePulse 2s infinite}
+.badge-scheduled{background:rgba(88,166,255,0.1);color:var(--accent);border:1px solid rgba(88,166,255,0.3)}
+@keyframes badgePulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.card-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.glass-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;padding:16px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:1024px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+.stat-card{background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:hidden}
+.stat-card.green{border-color:rgba(63,185,80,0.3);background:linear-gradient(135deg,rgba(63,185,80,0.05),transparent)}
+.stat-card.yellow{border-color:rgba(210,153,34,0.3);background:linear-gradient(135deg,rgba(210,153,34,0.05),transparent)}
+.stat-card.purple{border-color:rgba(163,113,247,0.3);background:linear-gradient(135deg,rgba(163,113,247,0.05),transparent)}
+.stat-icon{font-size:24px;margin-bottom:8px}
+.stat-value{font-size:22px;font-weight:700;margin-bottom:4px}
+.stat-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px}
+.stat-change{position:absolute;top:12px;right:12px;font-size:10px;padding:3px 6px;border-radius:4px}
+.stat-change.up{background:rgba(63,185,80,0.15);color:var(--green)}
+.btn{padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.2s;border:none;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#79c0ff);color:#fff}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(88,166,255,0.3)}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--bg4);border-color:var(--accent)}
+.btn-success{background:linear-gradient(135deg,var(--green),#39d353);color:#fff}
+.btn-danger{background:linear-gradient(135deg,var(--red),#f85149);color:#fff}
+.btn-sm{padding:6px 12px;font-size:11px}
+.btn-lg{padding:14px 28px;font-size:15px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.form-input,.form-select{width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--accent)}
+.form-error{color:var(--red);font-size:11px;margin-top:6px;display:flex;align-items:center;gap:4px}
+.form-error a{color:var(--accent);text-decoration:underline;cursor:pointer}
+.form-hint{color:var(--green);font-size:11px;margin-top:6px;display:flex;align-items:center;gap:4px}
+.score-section{display:flex;align-items:center;gap:32px;padding:32px;background:linear-gradient(135deg,rgba(88,166,255,0.05),rgba(63,185,80,0.03));border:1px solid var(--border);border-radius:20px;margin-bottom:20px}
+.score-ring{position:relative;width:140px;height:140px;flex-shrink:0}
+.score-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.score-ring circle{fill:none;stroke-width:8;stroke-linecap:round}
+.score-ring .bg{stroke:var(--bg4)}
+.score-ring .progress{stroke:url(#scoreGrad);stroke-dasharray:339;transition:stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1)}
+.score-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-size:36px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.score-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px}
+.score-info{flex:1}
+.score-title{font-size:22px;font-weight:700;margin-bottom:4px}
+.score-sub{color:var(--text2);margin-bottom:16px}
+.score-actions{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.score-controls{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.score-ctrl-btn{padding:4px 10px;font-size:10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all 0.2s}
+.score-ctrl-btn:hover{border-color:var(--accent);color:var(--text)}
+.user-selector{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.user-pill{padding:8px 14px;font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px}
+.user-pill:hover{border-color:var(--accent);background:var(--bg4)}
+.user-pill.active{border-color:var(--accent);background:linear-gradient(135deg,rgba(88,166,255,0.15),rgba(63,185,80,0.1));color:var(--text)}
+.user-pill .avatar{font-size:14px}
+.tier-bar{display:flex;gap:4px;margin-top:12px}
+.tier-item{flex:1;padding:8px;text-align:center;background:var(--bg4);border-radius:8px;font-size:10px;color:var(--text3);transition:all 0.3s}
+.tier-item.active{background:linear-gradient(135deg,var(--accent),var(--green));color:#fff;font-weight:600}
+.tier-item .tier-name{font-weight:600;margin-bottom:2px}
+.tier-item .tier-limit{opacity:0.8}
+.send-form{max-width:480px}
+.amount-display{display:flex;align-items:baseline;gap:8px;padding:24px;background:var(--bg3);border-radius:14px;margin-bottom:16px}
+.amount-value{font-size:40px;font-weight:700}
+.amount-currency{font-size:18px;color:var(--text2)}
+.rate-info{display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(63,185,80,0.05);border:1px solid rgba(63,185,80,0.2);border-radius:10px;margin-bottom:16px}
+.rate-value{font-family:'JetBrains Mono',monospace;color:var(--green)}
+.receive-amount{display:flex;align-items:center;gap:12px;padding:16px;background:linear-gradient(135deg,rgba(88,166,255,0.1),rgba(63,185,80,0.05));border:1px solid rgba(88,166,255,0.2);border-radius:12px;margin-bottom:20px}
+.receive-flag{font-size:32px}
+.receive-value{font-size:28px;font-weight:700}
+.receive-currency{font-size:14px;color:var(--text2)}
+.recipient-card{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all 0.2s;margin-bottom:10px}
+.recipient-card:hover,.recipient-card.selected{border-color:var(--accent);background:rgba(88,166,255,0.05)}
+.recipient-avatar{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.recipient-info{flex:1}
+.recipient-name{font-weight:600;margin-bottom:2px}
+.recipient-detail{font-size:12px;color:var(--text2)}
+.schedule-option{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.2s}
+.schedule-option:hover,.schedule-option.active{border-color:var(--accent);background:rgba(88,166,255,0.05)}
+.schedule-option input{display:none}
+.info-link{font-size:11px;color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;gap:4px;margin-top:8px}
+.info-link:hover{text-decoration:underline}
+.competitor-compare{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:12px}
+.competitor-compare .title{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.competitor-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.competitor-row:last-child{border-bottom:none}
+.competitor-row .name{color:var(--text2)}
+.competitor-row .rate{font-family:'JetBrains Mono',monospace}
+.competitor-row.best .rate{color:var(--green);font-weight:600}
+.competitor-row.worst .rate{color:var(--red)}
+.speed-compare{display:flex;gap:12px;margin-top:12px}
+.speed-item{flex:1;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;text-align:center}
+.speed-item.highlight{border-color:var(--green);background:rgba(63,185,80,0.05)}
+.speed-item .label{font-size:10px;color:var(--text2);margin-bottom:4px}
+.speed-item .time{font-size:14px;font-weight:600}
+.speed-item.highlight .time{color:var(--green)}
+.savings-highlight{background:linear-gradient(135deg,rgba(63,185,80,0.15),rgba(57,211,83,0.1));border:1px solid rgba(63,185,80,0.3);border-radius:10px;padding:12px;margin-top:12px;text-align:center}
+.savings-highlight .amount{font-size:20px;font-weight:700;color:var(--green)}
+.savings-highlight .label{font-size:11px;color:var(--text2)}
+.swipe-container{position:relative;max-width:400px;margin:0 auto;height:460px}
+.swipe-card{position:absolute;width:100%;background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:24px;cursor:grab;transition:transform 0.3s,opacity 0.3s;user-select:none}
+.swipe-card:active{cursor:grabbing}
+.swipe-card.dragging{transition:none}
+.swipe-card .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.swipe-card .user-info{display:flex;align-items:center;gap:12px}
+.swipe-card .avatar{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff}
+.swipe-card .name{font-weight:600;font-size:15px}
+.swipe-card .location{font-size:12px;color:var(--text2)}
+.swipe-card .amount-section{text-align:center;padding:24px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:20px}
+.swipe-card .amount{font-size:36px;font-weight:700}
+.swipe-card .conversion{font-size:14px;color:var(--text2);margin-top:8px}
+.swipe-card .corridor-label{font-size:11px;color:var(--accent);margin-top:4px}
+.swipe-card .details{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.swipe-card .detail-item{padding:12px;background:var(--bg4);border-radius:10px}
+.swipe-card .detail-label{font-size:10px;color:var(--text2);text-transform:uppercase;margin-bottom:4px}
+.swipe-card .detail-value{font-weight:600}
+.swipe-actions{display:flex;justify-content:center;gap:20px;margin-top:20px}
+.swipe-btn{width:64px;height:64px;border-radius:50%;border:2px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:all 0.2s}
+.swipe-btn.pass:hover{border-color:var(--red);background:rgba(248,81,73,0.1);transform:scale(1.1)}
+.swipe-btn.match:hover{border-color:var(--green);background:rgba(63,185,80,0.1);transform:scale(1.1)}
+.swipe-hint{text-align:center;font-size:12px;color:var(--text3);margin-top:16px}
+.empty-state{text-align:center;padding:60px 20px}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:0.5}
+.empty-title{font-size:18px;font-weight:600;margin-bottom:8px}
+.empty-text{color:var(--text2);margin-bottom:20px}
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}
+.timeline-item{position:relative;padding-bottom:24px}
+.timeline-item:last-child{padding-bottom:0}
+.timeline-dot{position:absolute;left:-22px;width:18px;height:18px;border-radius:50%;border:2px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:8px}
+.timeline-dot.active{border-color:var(--accent);background:var(--accent);color:#fff;animation:dotPulse 2s infinite}
+.timeline-dot.complete{border-color:var(--green);background:var(--green);color:#fff}
+.timeline-dot.pending{border-color:var(--text3)}
+@keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(88,166,255,0.4)}50%{box-shadow:0 0 0 8px rgba(88,166,255,0)}}
+.timeline-content{padding-left:8px}
+.timeline-title{font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.timeline-time{font-size:11px;color:var(--text2)}
+.timeline-desc{font-size:12px;color:var(--text2);margin-top:4px}
+.order-item{display:flex;align-items:center;gap:16px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;margin-bottom:10px}
+.order-item.highlight{border-color:var(--accent);background:rgba(88,166,255,0.05);animation:highlightPulse 2s infinite}
+@keyframes highlightPulse{0%,100%{box-shadow:0 0 0 0 rgba(88,166,255,0.2)}50%{box-shadow:0 0 0 4px rgba(88,166,255,0.1)}}
+.order-item.new{border-color:var(--purple);background:rgba(163,113,247,0.05)}
+.order-corridor{font-size:18px}
+.order-details{flex:1}
+.order-amount{font-weight:600;margin-bottom:2px}
+.order-rate{font-size:12px;color:var(--text2)}
+.order-score{text-align:right}
+.order-score-value{font-size:18px;font-weight:700;color:var(--green)}
+.order-score-label{font-size:10px;color:var(--text2)}
+.position-card{padding:16px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;cursor:pointer;transition:all 0.2s}
+.position-card:hover{border-color:var(--accent)}
+.position-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.position-pair{font-weight:600;display:flex;align-items:center;gap:8px}
+.position-util{font-size:12px;color:var(--text2)}
+.position-bar{height:8px;background:var(--bg4);border-radius:4px;overflow:hidden}
+.position-fill{height:100%;border-radius:4px;transition:width 0.5s}
+.payout-card{padding:16px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;margin-bottom:12px}
+.payout-card.pending{border-color:var(--yellow)}
+.payout-card.ready{border-color:var(--green);background:rgba(63,185,80,0.05)}
+.payout-header{display:flex;justify-content:space-between;margin-bottom:12px}
+.payout-amount{font-size:20px;font-weight:700}
+.payout-details{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px}
+.payout-label{color:var(--text2)}
+.tx-row{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all 0.2s}
+.tx-row:hover{border-color:var(--accent)}
+.tx-row.suspicious{border-color:var(--yellow);background:rgba(210,153,34,0.05)}
+.tx-row.highlight{border-color:var(--purple);background:rgba(163,113,247,0.05)}
+.tx-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.tx-info{flex:1;min-width:0}
+.tx-title{font-weight:600;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tx-detail{font-size:12px;color:var(--text2)}
+.tx-amount{text-align:right}
+.tx-value{font-weight:600}
+.tx-status{font-size:11px;color:var(--text2)}
+.notif-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.notif-title{font-weight:600;display:flex;align-items:center;gap:8px}
+.notif-count{background:var(--accent);color:#fff;font-size:10px;padding:2px 6px;border-radius:8px}
+.notif-list{display:flex;flex-direction:column;gap:8px}
+.notif-item{padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;font-size:12px;transition:all 0.3s;animation:slideIn 0.3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.notif-item.success{border-color:rgba(63,185,80,0.3);background:rgba(63,185,80,0.05)}
+.notif-item.warning{border-color:rgba(210,153,34,0.3);background:rgba(210,153,34,0.05)}
+.notif-item.info{border-color:rgba(88,166,255,0.3);background:rgba(88,166,255,0.05)}
+.notif-item .time{font-size:10px;color:var(--text3);margin-top:4px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;visibility:hidden;transition:all 0.3s}
+.modal-overlay.active{opacity:1;visibility:visible}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:560px;width:90%;max-height:85vh;overflow-y:auto;transform:scale(0.9);transition:transform 0.3s}
+.modal-overlay.active .modal{transform:scale(1)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:18px;font-weight:700}
+.modal-close{width:32px;height:32px;border-radius:8px;border:none;background:var(--bg3);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:var(--bg4);color:var(--text)}
+.modal-body{margin-bottom:20px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end}
+.match-summary{text-align:center;padding:20px}
+.match-icon{font-size:64px;margin-bottom:16px}
+.match-title{font-size:24px;font-weight:700;margin-bottom:8px}
+.match-detail{color:var(--text2);margin-bottom:20px}
+.match-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left}
+.match-stat{padding:12px;background:var(--bg3);border-radius:10px}
+.match-stat-label{font-size:10px;color:var(--text2);text-transform:uppercase;margin-bottom:4px}
+.match-stat-value{font-weight:600}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:12px;z-index:3000;transform:translateY(100px);opacity:0;transition:all 0.3s}
+.toast.active{transform:translateY(0);opacity:1}
+.toast.success{border-color:var(--green);background:linear-gradient(135deg,var(--bg2),rgba(63,185,80,0.1))}
+.toast.error{border-color:var(--red);background:linear-gradient(135deg,var(--bg2),rgba(248,81,73,0.1))}
+.toast.warning{border-color:var(--yellow)}
+.toast.info{border-color:var(--accent)}
+.toast-icon{font-size:20px}
+.toast-msg{font-size:13px}
+.guided-highlight{position:relative}
+.guided-highlight::after{content:'';position:absolute;inset:-4px;border:2px solid var(--purple);border-radius:inherit;animation:guidedPulse 1.5s infinite;pointer-events:none}
+@keyframes guidedPulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.guided-progress{background:var(--bg4);border-radius:8px;padding:8px 12px;margin-bottom:16px;font-size:11px;display:flex;align-items:center;gap:8px}
+.guided-progress .step{color:var(--purple);font-weight:600}
+.investor-highlight{background:linear-gradient(135deg,rgba(88,166,255,0.1),rgba(63,185,80,0.05));border:1px solid rgba(88,166,255,0.2);border-radius:10px;padding:12px;margin-top:12px}
+.investor-highlight .title{font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.investor-highlight .value{font-size:18px;font-weight:700;color:var(--green)}
+.investor-highlight .sub{font-size:11px;color:var(--text2)}
+.fraud-bar{height:20px;background:var(--bg4);border-radius:4px;overflow:hidden;margin:8px 0}
+.fraud-bar-fill{height:100%;background:linear-gradient(90deg,var(--yellow),var(--red));transition:width 0.5s}
+.badge-collusion{background:rgba(248,81,73,0.2);color:var(--red);border:1px solid rgba(248,81,73,0.4)}
+.revenue-breakdown{display:grid;gap:8px;margin-top:12px}
+.revenue-row{display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg3);border-radius:8px;font-size:12px}
+.revenue-row .label{color:var(--text2)}
+.revenue-row .value{font-weight:600;color:var(--green)}
+.corridor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.corridor-card{padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all 0.2s}
+.corridor-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.corridor-card .flags{font-size:24px;margin-bottom:8px}
+.corridor-card .route{font-weight:600;margin-bottom:4px}
+.corridor-card .volume{font-size:12px;color:var(--text2)}
+.corridor-card .rate{font-size:11px;color:var(--green);font-family:'JetBrains Mono',monospace}
+.settlement-leg{display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--bg3);border-radius:10px;margin-bottom:8px}
+.settlement-leg .status{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.settlement-leg .status.complete{background:var(--green);color:#fff}
+.settlement-leg .status.active{background:var(--accent);color:#fff;animation:dotPulse 2s infinite}
+.settlement-leg .status.pending{background:var(--bg4);color:var(--text3)}
+.settlement-leg .content{flex:1}
+.settlement-leg .title{font-weight:600;margin-bottom:2px}
+.settlement-leg .desc{font-size:12px;color:var(--text2)}
+.settlement-leg .time{font-size:10px;color:var(--text3);margin-top:4px}
+.liquidity-modal{display:grid;gap:16px}
+.liquidity-input{display:flex;gap:12px;align-items:flex-end}
+.liquidity-input .form-group{flex:1;margin-bottom:0}
+.corridor-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.corridor-stat{padding:12px;background:var(--bg3);border-radius:8px;text-align:center}
+.corridor-stat .value{font-size:20px;font-weight:700;margin-bottom:2px}
+.corridor-stat .label{font-size:10px;color:var(--text2);text-transform:uppercase}
+.mini-tx-list{max-height:200px;overflow-y:auto}
+.mini-tx{display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg4);border-radius:6px;margin-bottom:4px;font-size:12px}
+.mode-indicator{font-size:10px;padding:4px 8px;border-radius:4px;margin-left:8px}
+.mode-indicator.guided{background:rgba(163,113,247,0.2);color:var(--purple)}
+.mode-indicator.free{background:rgba(210,153,34,0.2);color:var(--yellow)}
+.kb-hint{font-size:9px;color:var(--text3);padding:2px 4px;background:var(--bg4);border-radius:3px;font-family:'JetBrains Mono',monospace}
+.kyc-status{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600}
+.kyc-verified{background:rgba(63,185,80,0.15);color:var(--green);border:1px solid rgba(63,185,80,0.3)}
+.kyc-pending{background:rgba(210,153,34,0.15);color:var(--yellow);border:1px solid rgba(210,153,34,0.3)}
+.kyc-rejected{background:rgba(248,81,73,0.15);color:var(--red);border:1px solid rgba(248,81,73,0.3)}
+.profile-header{display:flex;align-items:center;gap:20px;padding:24px;background:linear-gradient(135deg,rgba(88,166,255,0.08),rgba(63,185,80,0.05));border-radius:16px;margin-bottom:20px}
+.profile-avatar{width:96px;height:96px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0}
+.profile-info{flex:1}
+.profile-name{font-size:24px;font-weight:700;margin-bottom:4px}
+.profile-meta{font-size:13px;color:var(--text2);margin-bottom:12px}
+.profile-badges{display:flex;gap:8px;flex-wrap:wrap}
+.doc-item{display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-bottom:10px}
+.doc-info{display:flex;align-items:center;gap:12px}
+.doc-icon{width:40px;height:40px;border-radius:8px;background:rgba(88,166,255,0.1);display:flex;align-items:center;justify-content:center;font-size:18px}
+.doc-details{flex:1}
+.doc-name{font-weight:600;font-size:13px;margin-bottom:2px}
+.doc-meta{font-size:11px;color:var(--text2)}
+</style>
+</head>
+<body>
+<svg style="position:absolute;width:0;height:0"><defs><linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#58a6ff"/><stop offset="100%" stop-color="#3fb950"/></linearGradient></defs></svg>
+<div class="ambient"></div>
+<div class="demo-bar">
+<div class="demo-bar-left">
+<div class="demo-logo">⚡ FlowBridge</div>
+<div class="live-badge"><span class="live-dot"></span>DEMO v4</div>
+<select id="roleSelect" onchange="switchRole(this.value)">
+<option value="sender">👤 Sender</option>
+<option value="lp">🏦 Liquidity Provider</option>
+<option value="anchor">🏪 Anchor (Ghana)</option>
+<option value="receiver">📱 Receiver (Kofi)</option>
+<option value="admin">⚙️ Admin / Investor</option>
+</select>
+<span class="mode-indicator" id="modeIndicator">GUIDED</span>
+</div>
+<div class="demo-bar-right">
+<div class="savings-ticker">💰 Saved: <span class="value" id="savingsTicker">$847,293</span></div>
+<button class="scenario-btn" onclick="showScenarioModal()" title="Load demo scenario">🎯 Scenarios</button>
+<button class="replay-btn" onclick="replayFullDemo()" title="Restart guided demo">🔁 Replay</button>
+<button class="mode-btn" id="modeBtn" onclick="toggleMode()" title="Toggle guided/free mode">🎯 Mode</button>
+<button class="guided-btn" id="guidedBtn" onclick="toggleGuidedDemo()" title="Toggle step-by-step guidance">🎓 Guide</button>
+<button class="reset-btn" onclick="resetDemo()" title="Reset all demo state">↺ Reset</button>
+</div>
+</div>
+<div class="app">
+<aside class="sidebar" id="sidebar"></aside>
+<main class="main">
+<section class="content" id="content"></section>
+<aside class="notif-panel" id="notifPanel"></aside>
+</main>
+</div>
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+<div class="modal" id="modal" onclick="event.stopPropagation()"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ============ DATA STRUCTURES ============
+const CURRENCIES={USD:{name:'US Dollar',symbol:'$',flag:'🇺🇸'},AED:{name:'UAE Dirham',symbol:'د.إ',flag:'🇦🇪'},NGN:{name:'Nigerian Naira',symbol:'₦',flag:'🇳🇬'},GBP:{name:'British Pound',symbol:'£',flag:'🇬🇧'},EUR:{name:'Euro',symbol:'€',flag:'🇪🇺'},INR:{name:'Indian Rupee',symbol:'₹',flag:'🇮🇳'},PHP:{name:'Philippine Peso',symbol:'₱',flag:'🇵🇭'},KES:{name:'Kenyan Shilling',symbol:'KSh',flag:'🇰🇪'},GHS:{name:'Ghanaian Cedi',symbol:'₵',flag:'🇬🇭'},ZAR:{name:'South African Rand',symbol:'R',flag:'🇿🇦'},MXN:{name:'Mexican Peso',symbol:'$',flag:'🇲🇽'},PKR:{name:'Pakistani Rupee',symbol:'₨',flag:'🇵🇰'},BDT:{name:'Bangladeshi Taka',symbol:'৳',flag:'🇧🇩'},ZWL:{name:'Zimbabwe Dollar',symbol:'Z$',flag:'🇿🇼'}};
+
+const RATES={USD:{NGN:1580,INR:83.2,PHP:56.1,KES:154,GHS:15.4,ZAR:18.7,MXN:17.2,PKR:278,BDT:110,GBP:0.79,EUR:0.92,AED:3.67,ZWL:363},AED:{NGN:430,INR:22.6,PHP:15.2,KES:42,GHS:4.2,ZAR:5.1,PKR:75.6,BDT:30,USD:0.272,GBP:0.215,EUR:0.25,ZWL:99},GBP:{NGN:2000,INR:105,PHP:71,KES:195,GHS:19.5,ZAR:23.7,USD:1.27,EUR:1.17,AED:4.65,ZWL:460,PKR:352},EUR:{NGN:1720,INR:90.5,PHP:61,USD:1.09,GBP:0.86,AED:4.0,ZWL:395}};
+
+const TRAD_RATES={USD:{NGN:1520,INR:81.5,PHP:54.8,GHS:14.8,MXN:16.8,ZWL:340},AED:{NGN:410,INR:21.8,PHP:14.6,GHS:4.0,ZWL:92},GBP:{NGN:1920,INR:101,GHS:18.5,ZWL:440}};
+
+const COMPETITORS={western_union:{name:'Western Union',markup:0.045,fee:8},moneygram:{name:'MoneyGram',markup:0.038,fee:6},wise:{name:'Wise',markup:0.012,fee:3},bank:{name:'Bank Wire',markup:0.055,fee:25}};
+
+const TOP_CORRIDORS=[
+{from:'AED',to:'NGN',vol:'$2.4M',name:'UAE → Nigeria',txCount:847,avgSize:2834,revenue:36000,fraudFlags:2},
+{from:'USD',to:'INR',vol:'$4.1M',name:'US → India',txCount:1234,avgSize:3324,revenue:61500,fraudFlags:0},
+{from:'GBP',to:'INR',vol:'$1.8M',name:'UK → India',txCount:542,avgSize:3321,revenue:27000,fraudFlags:1},
+{from:'AED',to:'PHP',vol:'$1.6M',name:'UAE → Philippines',txCount:623,avgSize:2568,revenue:24000,fraudFlags:0},
+{from:'USD',to:'MXN',vol:'$3.2M',name:'US → Mexico',txCount:1156,avgSize:2768,revenue:48000,fraudFlags:3},
+{from:'AED',to:'GHS',vol:'$890K',name:'UAE → Ghana',txCount:312,avgSize:2853,revenue:13350,fraudFlags:0},
+{from:'GBP',to:'ZWL',vol:'$520K',name:'UK → Zimbabwe',txCount:187,avgSize:2781,revenue:7800,fraudFlags:0},
+{from:'AED',to:'KES',vol:'$1.1M',name:'UAE → Kenya',txCount:398,avgSize:2764,revenue:16500,fraudFlags:1}
+];
+
+const TIER_LIMITS={bronze:{daily:500,monthly:2000,perTx:300,label:'Bronze'},silver:{daily:2000,monthly:10000,perTx:1500,label:'Silver'},gold:{daily:5000,monthly:25000,perTx:4000,label:'Gold'},platinum:{daily:15000,monthly:100000,perTx:10000,label:'Platinum'}};
+
+// Multi-user system with distinct tiers and limits  
+// FIX 3: Added monthlyUsed and flagged properties
+const USERS={
+  aisha:{id:'USR-1001',name:'Aisha Okonkwo',email:'aisha@email.com',tier:'gold',score:87,avatar:'🇳🇬',color:'#3fb950',premium:true,baseCur:'AED',dailyUsed:1200,monthlyUsed:8500,flagged:false},
+  chidi:{id:'USR-2002',name:'Chidi Nwankwo',email:'chidi@email.com',tier:'silver',score:68,avatar:'🇬🇭',color:'#58a6ff',premium:false,baseCur:'AED',dailyUsed:800,monthlyUsed:4200,flagged:false},
+  priya:{id:'USR-3003',name:'Priya Sharma',email:'priya@email.com',tier:'bronze',score:42,avatar:'🇮🇳',color:'#a371f7',premium:false,baseCur:'USD',dailyUsed:150,monthlyUsed:900,flagged:false},
+  platinum:{id:'USR-9999',name:'Sarah Al-Mansouri',email:'sarah@email.com',tier:'platinum',score:95,avatar:'💎',color:'#8b5cf6',premium:true,baseCur:'AED',dailyUsed:500,monthlyUsed:15000,flagged:false}
+};
+
+let activeSenderId='aisha'; // Currently selected sender
+
+// Multi-LP profiles
+const LP_PROFILES={
+  kwame:{name:'Kwame (Africa)',avatar:'🏦',region:'Africa',revenue:18472,positions:{AED_NGN:{available:125000,locked:45000,rate:431.5,util:0.265},AED_GHS:{available:55000,locked:15000,rate:4.21,util:0.214},AED_KES:{available:42000,locked:8000,rate:42,util:0.16}}},
+  jose:{name:'Jose (LatAm)',avatar:'🌎',region:'LatAm',revenue:23150,positions:{USD_MXN:{available:98000,locked:35000,rate:17.2,util:0.263},GBP_MXN:{available:45000,locked:12000,rate:21.8,util:0.21}}},
+  raj:{name:'Raj (India)',avatar:'🇮🇳',region:'India',revenue:31200,positions:{USD_INR:{available:89000,locked:31000,rate:83.3,util:0.258},GBP_INR:{available:67000,locked:18000,rate:105,util:0.212}}},
+  chen:{name:'Chen (Asia)',avatar:'🇨🇳',region:'Asia',revenue:27800,positions:{AED_PHP:{available:67000,locked:23000,rate:15.2,util:0.256},USD_PHP:{available:78000,locked:22000,rate:56.1,util:0.22}}}
+};
+
+let activeLPId='kwame';
+
+// Multi-Anchor profiles
+const ANCHOR_PROFILES={
+  mpesa:{name:'M-Pesa Kenya',avatar:'🇰🇪',country:'Kenya',currency:'KES',pending:3,completed:47,balance:125000,commission:2340},
+  gcash:{name:'GCash Philippines',avatar:'🇵🇭',country:'Philippines',currency:'PHP',pending:2,completed:38,balance:89000,commission:1890},
+  upi:{name:'UPI India',avatar:'🇮🇳',country:'India',currency:'INR',pending:1,completed:62,balance:156000,commission:3100},
+  mtn:{name:'MTN Mobile Money',avatar:'🇳🇬',country:'Nigeria',currency:'NGN',pending:4,completed:55,balance:187000,commission:2750},
+  ecocash:{name:'EcoCash Zimbabwe',avatar:'🇿🇼',country:'Zimbabwe',currency:'ZWL',pending:1,completed:24,balance:34000,commission:850}
+};
+
+let activeAnchorId='mpesa';
+
+// Multi-Receiver profiles mapped to recipient countries
+const RECEIVER_PROFILES={
+  ghana:{name:'Kofi Mensah',avatar:'🇬🇭',method:'Mobile Money',country:'Ghana',currency:'GHS',balance:2500},
+  philippines:{name:'Grace Reyes',avatar:'🇵🇭',method:'Bank Transfer',country:'Philippines',currency:'PHP',balance:8500},
+  india:{name:'Raj Patel',avatar:'🇮🇳',method:'UPI',country:'India',currency:'INR',balance:12000},
+  zimbabwe:{name:'Tendai Moyo',avatar:'🇿🇼',method:'EcoCash',country:'Zimbabwe',currency:'ZWL',balance:3200},
+  nigeria:{name:'Emeka Obi',avatar:'🇳🇬',method:'Bank Transfer',country:'Nigeria',currency:'NGN',balance:15000}
+};
+
+let activeReceiverId='ghana';
+
+const RECIPIENTS=[
+{id:'RCP-001',name:'Kofi Mensah',country:'Ghana',flag:'🇬🇭',method:'Mobile Money',account:'**** 4521',cur:'GHS'},
+{id:'RCP-002',name:'Grace Reyes',country:'Philippines',flag:'🇵🇭',method:'Bank Transfer',account:'**** 8832',cur:'PHP'},
+{id:'RCP-003',name:'Raj Patel',country:'India',flag:'🇮🇳',method:'UPI',account:'**** 6677',cur:'INR'},
+{id:'RCP-004',name:'Tendai Moyo',country:'Zimbabwe',flag:'🇿🇼',method:'EcoCash',account:'**** 3344',cur:'ZWL'},
+{id:'RCP-005',name:'Emeka Obi',country:'Nigeria',flag:'🇳🇬',method:'Bank Transfer',account:'**** 7712',cur:'NGN'}
+];
+
+const SWIPE=[
+{id:'SW-001',name:'Emeka O.',flag:'🇳🇬',from:'AED',to:'NGN',amount:2000,rate:432,score:78,time:'2 min',avatar:'#f97316'},
+{id:'SW-002',name:'Priya S.',flag:'🇮🇳',from:'USD',to:'INR',amount:1500,rate:83.5,score:82,time:'5 min',avatar:'#8b5cf6'},
+{id:'SW-003',name:'Kofi A.',flag:'🇬🇭',from:'AED',to:'GHS',amount:800,rate:4.22,score:75,time:'3 min',avatar:'#10b981'},
+{id:'SW-004',name:'Grace M.',flag:'🇵🇭',from:'AED',to:'PHP',amount:1200,rate:15.3,score:80,time:'4 min',avatar:'#ec4899'},
+{id:'SW-005',name:'Raj P.',flag:'🇮🇳',from:'USD',to:'INR',amount:2500,rate:83.4,score:88,time:'1 min',avatar:'#f59e0b'},
+{id:'SW-006',name:'Tendai M.',flag:'🇿🇼',from:'GBP',to:'ZWL',amount:500,rate:462,score:71,time:'6 min',avatar:'#6366f1'}
+];
+
+const SCENARIOS={
+A:{name:'Instant Send',desc:'UAE migrant worker sends 500 AED to Ghana',corridor:{from:'AED',to:'GHS'},amount:500,recipient:RECIPIENTS[0],schedule:'now',premium:false,user:'aisha'},
+B:{name:'Scheduled Transfer',desc:'UAE worker schedules 1000 AED to Philippines',corridor:{from:'AED',to:'PHP'},amount:1000,recipient:RECIPIENTS[1],schedule:'+2min',premium:false,user:'chidi'},
+C:{name:'Premium Fast-Track',desc:'US investor sends $1500 to India with priority',corridor:{from:'USD',to:'INR'},amount:1500,recipient:RECIPIENTS[2],schedule:'now',premium:true,user:'aisha'}
+};
+
+const GUIDED_STEPS=[
+{role:'sender',view:'send',action:'Fill amount & select recipient',desc:'Enter 500 AED to send to Ghana'},
+{role:'sender',view:'swipe',action:'Find a matching counterparty',desc:'Swipe right to match with Kofi'},
+{role:'lp',view:'orders',action:'LP accepts the order',desc:'Liquidity provider funds the trade'},
+{role:'anchor',view:'payouts',action:'Anchor processes payout',desc:'Local partner pays out in GHS'},
+{role:'receiver',view:'dashboard',action:'Receiver gets funds',desc:'Kofi receives mobile money'},
+{role:'admin',view:'dashboard',action:'Review settlement',desc:'See complete flow & revenue'}
+];
+
+// ============ STATE VARIABLES ============
+let currentRole='sender',currentView='dashboard',notifications=[],DEMO_TX=null,txHistory=[],swipeIndex=0;
+let guidedMode=false,guidedStep=0,freeMode=false; // Mode flags
+let TOTAL_SAVINGS=847293,LP_REVENUE=18472,ANCHOR_REVENUE=12340;
+let BUSINESS_METRICS={totalVolume:2847293,txCount:1847,avgTxSize:1541,revenueTotal:42847,revenueFX:28400,revenuePremium:8200,revenueLP:4100,revenueAnchor:2147};
+
+let LP_STATE={
+AED_NGN:{available:125000,locked:45000,rate:431.5,util:0.265},
+USD_INR:{available:89000,locked:31000,rate:83.3,util:0.258},
+AED_PHP:{available:67000,locked:23000,rate:15.2,util:0.256},
+GBP_ZWL:{available:42000,locked:8000,rate:461,util:0.16},
+AED_GHS:{available:55000,locked:15000,rate:4.21,util:0.214}
+};
+
+let ANCHOR_STATE={
+ghana:{name:'GhanaPay Mobile',pending:3,completed:47,balance:125000,commission:2340},
+philippines:{name:'PH Express',pending:2,completed:38,balance:89000,commission:1890},
+india:{name:'India PayFast',pending:1,completed:62,balance:156000,commission:3100},
+zimbabwe:{name:'ZimCash',pending:1,completed:24,balance:34000,commission:850}
+};
+
+// Synthetic transaction history for corridors
+const CORRIDOR_TX_HISTORY={
+'AED_NGN':[
+{id:'TX-A001',amount:2500,from:'AED',to:'NGN',status:'completed',time:'10:45 AM',sender:'USR-8821'},
+{id:'TX-A002',amount:1800,from:'AED',to:'NGN',status:'completed',time:'10:32 AM',sender:'USR-7623'},
+{id:'TX-A003',amount:3200,from:'AED',to:'NGN',status:'completed',time:'10:15 AM',sender:'USR-9912'},
+{id:'TX-A004',amount:950,from:'AED',to:'NGN',status:'flagged',time:'09:58 AM',sender:'USR-1123',flag:'velocity'},
+{id:'TX-A005',amount:4100,from:'AED',to:'NGN',status:'completed',time:'09:41 AM',sender:'USR-5534'}
+],
+'USD_INR':[
+{id:'TX-U001',amount:3500,from:'USD',to:'INR',status:'completed',time:'11:02 AM',sender:'USR-3344'},
+{id:'TX-U002',amount:2200,from:'USD',to:'INR',status:'completed',time:'10:48 AM',sender:'USR-6678'},
+{id:'TX-U003',amount:5000,from:'USD',to:'INR',status:'completed',time:'10:21 AM',sender:'USR-2211'}
+],
+'AED_GHS':[
+{id:'TX-G001',amount:800,from:'AED',to:'GHS',status:'completed',time:'10:55 AM',sender:'USR-4455'},
+{id:'TX-G002',amount:1200,from:'AED',to:'GHS',status:'completed',time:'10:28 AM',sender:'USR-7788'}
+]
+};
+
+// ============ UTILITY FUNCTIONS ============
+function fmt(n,d=2){if(n===null||n===undefined)return'0';return new Intl.NumberFormat('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n)}
+function fmtCur(amt,cur){const c=CURRENCIES[cur];return c?(c.symbol||'')+fmt(amt):'$'+fmt(amt)}
+function getRate(from,to){if(from===to)return 1;if(RATES[from]&&RATES[from][to])return RATES[from][to];if(RATES[to]&&RATES[to][from])return 1/RATES[to][from];if(RATES[from]&&RATES[from]['USD']&&RATES['USD']&&RATES['USD'][to])return RATES[from]['USD']*RATES['USD'][to];return 430} // Default fallback
+function getTradRate(from,to){if(TRAD_RATES[from]&&TRAD_RATES[from][to])return TRAD_RATES[from][to];const r=getRate(from,to);return r?r*0.96:null}
+function calcReceive(amt,from,to){const r=getRate(from,to);return r?amt*r:0}
+function calculateSavings(amt,from,to){const ourRate=getRate(from,to),tradRate=getTradRate(from,to);if(!ourRate||!tradRate)return 0;return Math.max(0,amt*ourRate-amt*tradRate)}
+function getActiveSender(){return USERS[activeSenderId]||USERS.aisha}
+function getTierFromScore(s){if(s>=90)return'platinum';if(s>=75)return'gold';if(s>=50)return'silver';return'bronze'}
+function getLimit(tier){return TIER_LIMITS[tier]||TIER_LIMITS.bronze}
+function updateSavingsTicker(){const el=document.getElementById('savingsTicker');if(el)el.textContent='$'+fmt(TOTAL_SAVINGS,0)}
+function updateModeIndicator(){const el=document.getElementById('modeIndicator');if(!el)return;if(guidedMode){el.textContent='GUIDED';el.className='mode-indicator guided'}else if(freeMode){el.textContent='FREE';el.className='mode-indicator free'}else{el.textContent='DEMO';el.className='mode-indicator'}}
+
+// ============ UI FEEDBACK ============
+function showToast(msg,type='info'){const t=document.getElementById('toast');if(!t)return;t.innerHTML='<span class="toast-icon">'+(type==='success'?'✓':type==='error'?'✕':type==='warning'?'⚠':'ℹ')+'</span><span class="toast-msg">'+msg+'</span>';t.className='toast '+type+' active';setTimeout(()=>{if(t)t.classList.remove('active')},3500)}
+
+function pushNotif(msg,type='info',role=null){const n={id:Date.now()+Math.random(),msg,type,time:new Date().toLocaleTimeString(),role};notifications.unshift(n);if(notifications.length>20)notifications.pop();if(!role||role===currentRole)renderNotifications()}
+
+function renderNotifications(){const p=document.getElementById('notifPanel');if(!p)return;const filtered=notifications.filter(n=>!n.role||n.role===currentRole).slice(0,12);
+p.innerHTML='<div class="notif-header"><span class="notif-title">🔔 Activity</span>'+(filtered.length?'<span class="notif-count">'+filtered.length+'</span>':'')+'</div><div class="notif-list">'+filtered.map(n=>'<div class="notif-item '+n.type+'"><div>'+n.msg+'</div><div class="time">'+n.time+'</div></div>').join('')+'</div>'}
+
+// ============ MODAL SYSTEM ============
+function openModal(content){const o=document.getElementById('modalOverlay'),m=document.getElementById('modal');if(o&&m){m.innerHTML=content;o.classList.add('active')}}
+function closeModal(e){if(e&&e.target&&e.target.id!=='modalOverlay'&&!e.target.classList.contains('modal-close')&&!e.target.closest('.modal-footer button'))return;const o=document.getElementById('modalOverlay');if(o)o.classList.remove('active')}
+function forceCloseModal(){const o=document.getElementById('modalOverlay');if(o)o.classList.remove('active')}
+
+// ============ MODE & GUIDED DEMO ============
+function toggleMode(){
+  freeMode=!freeMode;
+  if(freeMode){guidedMode=false;document.getElementById('guidedBtn')?.classList.remove('active')}
+  document.getElementById('modeBtn')?.classList.toggle('free',freeMode);
+  updateModeIndicator();
+  showToast(freeMode?'🔓 Free exploration mode - no guided steps':'🎯 Demo mode restored','info');
+}
+
+function toggleGuidedDemo(){
+  guidedMode=!guidedMode;
+  document.getElementById('guidedBtn')?.classList.toggle('active',guidedMode);
+  if(guidedMode){freeMode=false;guidedStep=0;document.getElementById('modeBtn')?.classList.remove('free');showToast('🎓 Guided demo activated','info');pushNotif('Follow the purple highlights to see the full flow','info')}
+  else{showToast('Guided demo disabled','info')}
+  updateModeIndicator();render();
+}
+
+function advanceGuidedStep(){
+  if(!guidedMode||freeMode)return;
+  guidedStep++;
+  if(guidedStep>=GUIDED_STEPS.length){guidedMode=false;document.getElementById('guidedBtn')?.classList.remove('active');updateModeIndicator();showToast('🎉 Demo complete!','success');return}
+  const step=GUIDED_STEPS[guidedStep];
+  showToast('Step '+(guidedStep+1)+'/'+GUIDED_STEPS.length+': '+step.action,'info');
+  if(step.role!==currentRole){currentRole=step.role;const sel=document.getElementById('roleSelect');if(sel)sel.value=step.role}
+  currentView=step.view;
+  render();
+}
+
+function replayFullDemo(){resetDemo();loadScenario('A');guidedMode=true;freeMode=false;guidedStep=0;document.getElementById('guidedBtn')?.classList.add('active');document.getElementById('modeBtn')?.classList.remove('free');updateModeIndicator();showToast('🎬 Starting guided investor demo...','info');pushNotif('🎓 Guided demo started - follow the highlights','info')}
+
+function resetDemo(){
+  resetDemoTx();
+  txHistory=[];swipeIndex=0;guidedStep=0;notifications=[];
+  // Reset all users
+  Object.keys(USERS).forEach(k=>{const u=USERS[k];u.dailyUsed=k==='aisha'?1200:k==='chidi'?800:k==='priya'?150:500;u.monthlyUsed=k==='aisha'?8500:k==='chidi'?4200:k==='priya'?900:15000;u.flagged=false});
+  USERS.aisha.score=87;USERS.aisha.tier='gold';USERS.aisha.premium=true;
+  USERS.chidi.score=68;USERS.chidi.tier='silver';USERS.chidi.premium=false;
+  USERS.priya.score=42;USERS.priya.tier='bronze';USERS.priya.premium=false;
+  USERS.platinum.score=95;USERS.platinum.tier='platinum';USERS.platinum.premium=true;
+  // FIX: Corrected activeReceiverId from 'mobile' to 'ghana'
+  activeSenderId='aisha';activeLPId='kwame';activeAnchorId='mpesa';activeReceiverId='ghana';
+  currentView='dashboard';
+  showToast('Demo reset','info');
+  render();
+}
+
+function resetDemoTx(){
+  DEMO_TX=null;
+  forceCloseModal();
+}
+
+// ============ SCENARIOS ============
+function showScenarioModal(){
+const html='<div class="modal-header"><span class="modal-title">🎯 Demo Scenarios</span><button class="modal-close" onclick="forceCloseModal()">✕</button></div><div class="modal-body">'+
+Object.entries(SCENARIOS).map(([k,s])=>'<div class="glass-card" style="margin-bottom:12px;cursor:pointer" onclick="loadScenario(\''+k+'\');forceCloseModal()"><div style="font-weight:600;margin-bottom:4px">Scenario '+k+': '+s.name+'</div><div style="font-size:12px;color:var(--text2)">'+s.desc+'</div><div style="font-size:11px;color:var(--accent);margin-top:6px">'+CURRENCIES[s.corridor.from].flag+' '+s.corridor.from+' → '+CURRENCIES[s.corridor.to].flag+' '+s.corridor.to+' | '+fmtCur(s.amount,s.corridor.from)+'</div></div>').join('')+
+'</div><div class="modal-footer"><button class="btn btn-secondary" onclick="forceCloseModal()">Cancel</button></div>';
+openModal(html);
+}
+
+function loadScenario(key){
+  const s=SCENARIOS[key];if(!s)return;
+  resetDemo();
+  if(s.user&&USERS[s.user]){activeSenderId=s.user}
+  const u=getActiveSender();
+  DEMO_TX={
+    id:'TX-'+Math.random().toString(36).substr(2,6).toUpperCase(),
+    fromCur:s.corridor.from,toCur:s.corridor.to,amount:s.amount,
+    recipient:s.recipient,status:'pending',
+    scheduled:s.schedule!=='now',scheduledTime:s.schedule==='+2min'?new Date(Date.now()+120000):null,
+    needByType:s.schedule==='now'?'immediate':'scheduled',
+    premium:s.premium,timestamp:new Date()
+  };
+  pushNotif('🎯 Loaded Scenario '+key+': '+s.name,'info');
+  showToast('Scenario '+key+' loaded: '+s.name,'success');
+  currentRole='sender';currentView='send';
+  render();
+}
+
+// ============ SENDER USER SWITCHING ============
+function switchSenderUser(userId){
+  if(!USERS[userId])return;
+  activeSenderId=userId;
+  // Update base currency if different
+  if(DEMO_TX){DEMO_TX.fromCur=USERS[userId].baseCur}
+  showToast('Switched to '+USERS[userId].name,'info');
+  render();
+}
+
+// ============ SCORE & TIER FUNCTIONS ============
+function simulateScoreChange(delta){
+  const u=getActiveSender();
+  u.score=Math.max(10,Math.min(100,u.score+delta));
+  u.tier=getTierFromScore(u.score);
+  showToast((delta>0?'📈 Score increased':'📉 Score decreased')+' to '+u.score+' ('+u.tier.toUpperCase()+')',delta>0?'success':'warning');
+  if(currentRole==='sender')render();
+}
+
+function applyFraudPenalty(userId){
+  const u=getActiveSender();
+  u.score=Math.max(10,u.score-4);
+  u.tier=getTierFromScore(u.score);
+  pushNotif('⚠️ FlowScore penalty applied: -4 points','warning','sender');
+  pushNotif('🚨 Fraud penalty applied to '+userId,'warning','admin');
+  if(currentRole==='sender'||currentRole==='admin')render();
+}
+
+// ============ SETTLEMENT & INFO MODALS ============
+function showSettlementModal(){
+const steps=['<b>1. Sender Pays Locally</b><br>Sender pays via their local bank or card. Funds never cross borders.','<b>2. LP Takes FX Position</b><br>Liquidity Provider uses their own balance to fulfill, earning spread.','<b>3. Anchor Receives Instruction</b><br>Local Anchor partner gets payout instructions with receiver details.','<b>4. Receiver Gets Paid</b><br>Receiver gets local currency via mobile money/bank within minutes.','<b>5. FlowBridge Orchestrates</b><br>We match, verify, and settle - but never hold customer funds.'];
+const html='<div class="modal-header"><span class="modal-title">⚡ How Settlement Works</span><button class="modal-close" onclick="forceCloseModal()">✕</button></div><div class="modal-body"><div class="timeline">'+steps.map((s,i)=>'<div class="timeline-item"><div class="timeline-dot complete">✓</div><div class="timeline-content"><div style="font-size:13px">'+s+'</div></div></div>').join('')+'</div><div class="investor-highlight" style="margin-top:20px"><div class="title">💡 Key Insight</div><div style="font-size:13px">Traditional remittances: 3-5 days, multiple intermediaries.<br>FlowBridge: < 5 minutes using local liquidity pools.</div></div></div><div class="modal-footer"><button class="btn btn-primary" onclick="forceCloseModal()">Got it</button></div>';
+openModal(html);
+}
+
+function showSettlementTraceModal(){
+  if(!DEMO_TX){showToast('No active transaction to trace','warning');return}
+  const tx=DEMO_TX;
+  const legs=[
+    {title:'Sender → Local PSP',desc:'Funds collected via local payment method',status:tx.status!=='pending'?'complete':'active',time:tx.timestamp?.toLocaleTimeString()},
+    {title:'FlowBridge Matching',desc:'Order matched with counterparty via FlowSwipe',status:['matched','lp_funded','payout_processing','completed'].includes(tx.status)?'complete':tx.status==='pending'?'active':'pending',time:tx.matchTime?.toLocaleTimeString()},
+    {title:'LP FX Position',desc:'Liquidity provider locks funds for settlement',status:['lp_funded','payout_processing','completed'].includes(tx.status)?'complete':tx.status==='matched'?'active':'pending',time:tx.lpTime?.toLocaleTimeString()},
+    {title:'Anchor Payout',desc:'Local anchor triggers payout to receiver',status:['payout_processing','completed'].includes(tx.status)?'complete':tx.status==='lp_funded'?'active':'pending',time:tx.payoutTime?.toLocaleTimeString()},
+    {title:'Receiver Credited',desc:'Funds available to recipient',status:tx.status==='completed'?'complete':tx.status==='payout_processing'?'active':'pending',time:tx.completedTime?.toLocaleTimeString()}
+  ];
+  const html='<div class="modal-header"><span class="modal-title">🔍 Settlement Trace: '+tx.id+'</span><button class="modal-close" onclick="forceCloseModal()">✕</button></div><div class="modal-body">'+
+  legs.map(l=>'<div class="settlement-leg"><div class="status '+l.status+'">'+(l.status==='complete'?'✓':l.status==='active'?'●':'○')+'</div><div class="content"><div class="title">'+l.title+'</div><div class="desc">'+l.desc+'</div>'+(l.time?'<div class="time">'+l.time+'</div>':'')+'</div></div>').join('')+
+  '<div class="investor-highlight"><div class="title">Transaction Summary</div><div style="font-size:12px">Amount: '+fmtCur(tx.amount,tx.fromCur)+' → '+fmt(tx.amount*getRate(tx.fromCur,tx.toCur),0)+' '+tx.toCur+'<br>Status: '+tx.status.replace(/_/g,' ')+(tx.scheduled?' (Scheduled)':'')+'</div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="forceCloseModal()">Close</button></div>';
+  openModal(html);
+}
+
+// ============ CORRIDOR DRILL-DOWN ============
+function showCorridorDetailModal(corridorIdx){
+  const c=TOP_CORRIDORS[corridorIdx];if(!c)return;
+  const key=c.from+'_'+c.to;
+  const recentTx=CORRIDOR_TX_HISTORY[key]||[
+    {id:'TX-SYN1',amount:Math.round(c.avgSize*0.9),status:'completed',time:'10:45 AM'},
+    {id:'TX-SYN2',amount:Math.round(c.avgSize*1.1),status:'completed',time:'10:22 AM'},
+    {id:'TX-SYN3',amount:Math.round(c.avgSize),status:'completed',time:'09:58 AM'}
+  ];
+  const html='<div class="modal-header"><span class="modal-title">'+CURRENCIES[c.from].flag+' '+c.name+' '+CURRENCIES[c.to].flag+'</span><button class="modal-close" onclick="forceCloseModal()">✕</button></div><div class="modal-body"><div class="corridor-detail-grid"><div class="corridor-stat"><div class="value" style="color:var(--green)">'+c.vol+'</div><div class="label">Total Volume</div></div><div class="corridor-stat"><div class="value">'+fmt(c.txCount,0)+'</div><div class="label">Transactions</div></div><div class="corridor-stat"><div class="value">$'+fmt(c.avgSize,0)+'</div><div class="label">Avg Size</div></div><div class="corridor-stat"><div class="value" style="color:var(--green)">$'+fmt(c.revenue,0)+'</div><div class="label">Revenue</div></div></div>'+
+  '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-weight:600">Exchange Rate</span><span style="color:var(--green);font-family:JetBrains Mono">'+fmt(getRate(c.from,c.to),2)+' '+c.to+'</span></div>'+(c.fraudFlags?'<div style="display:flex;justify-content:space-between"><span style="color:var(--yellow)">⚠️ Fraud Flags</span><span>'+c.fraudFlags+'</span></div>':'')+'</div>'+
+  '<div style="font-weight:600;margin-bottom:8px">Recent Transactions</div><div class="mini-tx-list">'+recentTx.map(t=>'<div class="mini-tx"><span>'+t.id+'</span><span>'+fmtCur(t.amount,c.from)+'</span><span class="badge badge-'+(t.status==='completed'?'success':t.status==='flagged'?'warning':'info')+'">'+t.status+'</span></div>').join('')+'</div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="forceCloseModal()">Close</button><button class="btn btn-primary" onclick="forceCloseModal();showToast(\'Corridor report exported\',\'success\')">📊 Export</button></div>';
+  openModal(html);
+}
+
+// ============ LIQUIDITY MODALS ============
+function showAddLiquidityModal(){
+const pairs=Object.keys(LP_STATE);
+const html='<div class="modal-header"><span class="modal-title">💰 Add Liquidity</span><button class="modal-close" onclick="forceCloseModal()">✕</button></div><div class="modal-body"><div class="liquidity-modal"><div class="form-group"><label class="form-label">Currency Pair</label><select class="form-select" id="liqPair">'+pairs.map(p=>'<option value="'+p+'">'+p.replace('_',' → ')+'</option>').join('')+'</select></div><div class="form-group"><label class="form-label">Amount (USD equivalent)</label><input type="number" class="form-input" id="liqAmount" value="10000" min="1000" step="1000"></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="forceCloseModal()">Cancel</button><button class="btn btn-success" onclick="addLiquidity()">Add Liquidity</button></div>';
+openModal(html);
+}
+
+function addLiquidity(){
+  const pair=document.getElementById('liqPair')?.value;
+  const amt=parseInt(document.getElementById('liqAmount')?.value)||10000;
+  if(LP_STATE[pair]){LP_STATE[pair].available+=amt;LP_STATE[pair].util=LP_STATE[pair].locked/(LP_STATE[pair].available+LP_STATE[pair].locked)}
+  forceCloseModal();
+  showToast('💰 Added $'+fmt(amt,0)+' liquidity to '+pair.replace('_',' → '),'success');
+  pushNotif('Liquidity position updated for '+pair.replace('_',' → '),'success','lp');
+  if(currentRole==='lp')render();
+}
+
+function showWithdrawModal(){
+const pairs=Object.keys(LP_STATE);
+const html='<div class="modal-header"><span class="modal-title">💸 Withdraw Liquidity</span><button class="modal-close" onclick="forceCloseModal()">✕</button></div><div class="modal-body"><div class="liquidity-modal"><div class="form-group"><label class="form-label">Currency Pair</label><select class="form-select" id="withdrawPair">'+pairs.map(p=>'<option value="'+p+'">'+p.replace('_',' → ')+' (Avail: $'+fmt(LP_STATE[p].available,0)+')</option>').join('')+'</select></div><div class="form-group"><label class="form-label">Amount (USD equivalent)</label><input type="number" class="form-input" id="withdrawAmount" value="5000" min="1000" step="1000"></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="forceCloseModal()">Cancel</button><button class="btn btn-danger" onclick="withdrawLiquidity()">Withdraw</button></div>';
+openModal(html);
+}
+
+function withdrawLiquidity(){
+  const pair=document.getElementById('withdrawPair')?.value;
+  const amt=parseInt(document.getElementById('withdrawAmount')?.value)||5000;
+  if(LP_STATE[pair]){
+    const maxAvail=LP_STATE[pair].available;
+    const actual=Math.min(amt,maxAvail);
+    LP_STATE[pair].available-=actual;
+    LP_STATE[pair].util=LP_STATE[pair].locked/(LP_STATE[pair].available+LP_STATE[pair].locked)||0;
+    forceCloseModal();
+    showToast('💸 Withdrew $'+fmt(actual,0)+' from '+pair.replace('_',' → '),'success');
+    pushNotif('Liquidity withdrawn from '+pair.replace('_',' → '),'info','lp');
+    if(currentRole==='lp')render();
+  }
+}
+
+// ============ FRAUD & REVIEW MODALS ============
+function showFraudReviewModal(tx){
+const html='<div class="modal-header"><span class="modal-title">🔍 Fraud Review: '+(tx?.id||'TX-XXX')+'</span><button class="modal-close" onclick="forceCloseModal()">✕</button></div><div class="modal-body"><div class="glass-card" style="margin-bottom:16px"><div style="font-weight:600;margin-bottom:8px">Pattern Analysis</div><div style="font-size:12px;color:var(--text2);margin-bottom:12px">Repeated bilateral volume between same counterparties</div><div style="font-size:11px;margin-bottom:4px">Counterparty 1 (USR-X847)</div><div class="fraud-bar"><div class="fraud-bar-fill" style="width:83%"></div></div><div style="font-size:10px;color:var(--text2);text-align:right">83% of volume</div><div style="font-size:11px;margin-bottom:4px;margin-top:8px">Counterparty 2 (USR-Y293)</div><div class="fraud-bar"><div class="fraud-bar-fill" style="width:17%"></div></div><div style="font-size:10px;color:var(--text2);text-align:right">17% of volume</div></div><div class="glass-card"><div style="font-weight:600;margin-bottom:8px">Risk Signals</div><div style="font-size:12px">• 12 transactions in 48 hours<br>• Amounts within 5% variance<br>• Same corridor both directions<br>• No other counterparties</div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="forceCloseModal();showToast(\'Transaction marked as clean\',\'success\')">Mark as Clean</button><button class="btn btn-danger" onclick="forceCloseModal();showToast(\'Transaction escalated to compliance\',\'warning\')">Escalate</button></div>';
+openModal(html);
+}
+
+function simulateCollusionPattern(){
+const tx1={id:'TX-COL1',from:'USR-X847',to:'USR-Y293',amount:5000,fromCur:'AED',toCur:'NGN',corridor:'AED→NGN',status:'flagged',pattern:'bilateral',concentration:83};
+const tx2={id:'TX-COL2',from:'USR-Y293',to:'USR-X847',amount:4800,fromCur:'AED',toCur:'NGN',corridor:'AED→NGN',status:'flagged',pattern:'bilateral',concentration:83};
+txHistory.unshift({...tx1,timestamp:new Date()},{...tx2,timestamp:new Date(Date.now()-60000)});
+pushNotif('🚨 Collusion pattern detected: bilateral volume spike','warning','admin');
+pushNotif('⚠️ 2 transactions flagged for review','warning','admin');
+applyFraudPenalty('USR-X847');
+showToast('🔴 Collusion simulation complete','warning');
+if(currentRole==='admin')render();
+}
+
+// ============ DETAIL MODALS ============
+function showTxDetailModal(tx){
+if(!tx)return;
+const rate=getRate(tx.fromCur||'AED',tx.toCur||'NGN');
+const html='<div class="modal-header"><span class="modal-title">📋 Transaction Details</span><button class="modal-close" onclick="forceCloseModal()">✕</button></div><div class="modal-body"><div class="glass-card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2)">Transaction ID</span><span style="font-family:JetBrains Mono">'+(tx.id||'TX-XXX')+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2)">Status</span><span class="badge badge-'+(tx.status==='completed'?'success':tx.status==='flagged'?'danger':'info')+'">'+(tx.status||'pending')+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2)">Amount</span><span>'+fmtCur(tx.amount||500,tx.fromCur||'AED')+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2)">Receives</span><span>'+fmt((tx.amount||500)*rate,0)+' '+(tx.toCur||'NGN')+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2)">Corridor</span><span>'+(tx.fromCur||'AED')+' → '+(tx.toCur||'NGN')+'</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Time</span><span>'+(tx.timestamp?.toLocaleString()||'Just now')+'</span></div></div>'+(tx.recipient?'<div class="glass-card"><div style="font-weight:600;margin-bottom:8px">Recipient</div><div style="font-size:12px">'+tx.recipient.name+' • '+tx.recipient.method+'<br>'+tx.recipient.account+'</div></div>':'')+'</div><div class="modal-footer"><button class="btn btn-secondary" onclick="forceCloseModal()">Close</button><button class="btn btn-primary" onclick="forceCloseModal();showToast(\'Receipt downloaded\',\'success\')">📥 Receipt</button></div>';
+openModal(html);
+}
+
+function showPayoutDetailModal(payout){
+const html='<div class="modal-header"><span class="modal-title">💳 Payout Details</span><button class="modal-close" onclick="forceCloseModal()">✕</button></div><div class="modal-body"><div class="glass-card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2)">Payout ID</span><span style="font-family:JetBrains Mono">'+(payout?.id||'PAY-XXX')+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2)">Amount</span><span style="font-weight:700;color:var(--green)">₵'+fmt(payout?.amount||0,0)+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2)">Recipient</span><span>'+(payout?.recipient||'Unknown')+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2)">Status</span><span class="badge badge-'+(payout?.status==='completed'?'success':'warning')+'">'+(payout?.status||'pending')+'</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Commission</span><span style="color:var(--green)">$'+fmt((payout?.amount||0)*0.004,2)+'</span></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="forceCloseModal()">Close</button><button class="btn btn-primary" onclick="forceCloseModal();showToast(\'Payout exported\',\'success\')">📊 Export</button></div>';
+openModal(html);
+}
+
+function showLimitInfoModal(){
+const u=getActiveSender();
+const lim=getLimit(u.tier);
+const html='<div class="modal-header"><span class="modal-title">📊 Why Is My Limit Low?</span><button class="modal-close" onclick="forceCloseModal()">✕</button></div><div class="modal-body"><p style="margin-bottom:16px;color:var(--text2)">Your transaction limits are based on your FlowScore and membership tier.</p><div class="glass-card" style="margin-bottom:12px"><div style="font-weight:600;margin-bottom:8px">Your Current Status</div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>FlowScore</span><span style="color:var(--green)">'+u.score+'/100</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Tier</span><span class="badge badge-'+u.tier+'">'+u.tier.toUpperCase()+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Per Transaction</span><span>'+fmtCur(lim.perTx,'USD')+'</span></div><div style="display:flex;justify-content:space-between"><span>Daily Limit</span><span>'+fmtCur(lim.daily,'USD')+'</span></div></div><div class="glass-card"><div style="font-weight:600;margin-bottom:8px">How to Increase Limits</div><div style="font-size:12px">• Complete more transactions successfully<br>• Verify additional identity documents<br>• Maintain low fraud risk patterns<br>• Upgrade to Premium membership</div></div></div><div class="modal-footer"><button class="btn btn-primary" onclick="forceCloseModal()">Got it</button></div>';
+openModal(html);
+}
+
+// ============ MATCH & COMPLETION MODALS ============
+function showMatchSummaryModal(card){
+const savings=DEMO_TX?calculateSavings(DEMO_TX.amount,DEMO_TX.fromCur,DEMO_TX.toCur):0;
+// FIX: Use DEMO_TX currencies instead of card currencies for correct display
+const yourReceive=DEMO_TX?DEMO_TX.amount*getRate(DEMO_TX.fromCur,DEMO_TX.toCur):card.amount*card.rate;
+const receiveCur=DEMO_TX?DEMO_TX.toCur:card.to;
+const html='<div class="match-summary"><div class="match-icon">🎉</div><div class="match-title">It\'s a Match!</div><div class="match-detail">You matched with '+card.name+' for optimal settlement</div><div class="match-stats"><div class="match-stat"><div class="match-stat-label">Your Send</div><div class="match-stat-value">'+(DEMO_TX?fmtCur(DEMO_TX.amount,DEMO_TX.fromCur):'500 AED')+'</div></div><div class="match-stat"><div class="match-stat-label">They Receive</div><div class="match-stat-value">'+fmt(yourReceive,0)+' '+receiveCur+'</div></div><div class="match-stat"><div class="match-stat-label">Combined Score</div><div class="match-stat-value" style="color:var(--green)">'+(getActiveSender().score+card.score)+'</div></div><div class="match-stat"><div class="match-stat-label">Settlement</div><div class="match-stat-value">< 5 min</div></div></div>'+(savings>0?'<div class="savings-highlight" style="margin-top:16px"><div class="amount">+'+fmtCur(savings,receiveCur)+'</div><div class="label">You save vs traditional transfer</div></div>':'')+'</div><div class="modal-footer"><button class="btn btn-secondary" onclick="forceCloseModal()">Close</button><button class="btn btn-primary" onclick="forceCloseModal();setView(\'dashboard\')">View Progress</button></div>';
+openModal(html);
+}
+
+function showCompletionModal(){
+const tx=DEMO_TX;if(!tx)return;
+const rate=getRate(tx.fromCur,tx.toCur),tradRate=getTradRate(tx.fromCur,tx.toCur),savings=calculateSavings(tx.amount,tx.fromCur,tx.toCur);
+const recv=tx.amount*rate;
+const html='<div class="match-summary"><div class="match-icon">🎉</div><div class="match-title">Transfer Complete!</div><div class="match-detail">'+(tx.recipient?.name||'Recipient')+' received '+fmt(recv,0)+' '+(tx.toCur||'GHS')+'</div><div class="match-stats"><div class="match-stat"><div class="match-stat-label">You Sent</div><div class="match-stat-value">'+fmtCur(tx.amount,tx.fromCur)+'</div></div><div class="match-stat"><div class="match-stat-label">They Got</div><div class="match-stat-value">'+fmt(recv,0)+' '+tx.toCur+'</div></div><div class="match-stat"><div class="match-stat-label">FlowBridge Rate</div><div class="match-stat-value" style="color:var(--green)">'+fmt(rate,2)+'</div></div><div class="match-stat"><div class="match-stat-label">Bank Rate</div><div class="match-stat-value" style="color:var(--red);text-decoration:line-through">'+fmt(tradRate,2)+'</div></div></div>'+(savings>0?'<div class="savings-highlight" style="margin-top:16px"><div class="amount">+'+fmt(savings,0)+' '+tx.toCur+'</div><div class="label">More than bank would give!</div></div>':'')+'<div class="revenue-breakdown"><div style="font-size:11px;color:var(--text2);margin-bottom:8px">Platform Revenue Breakdown</div><div class="revenue-row"><span class="label">FX Spread (1.2%)</span><span class="value">$'+fmt(tx.amount*0.012,2)+'</span></div><div class="revenue-row"><span class="label">LP Fee</span><span class="value">$'+fmt(tx.amount*0.008,2)+'</span></div><div class="revenue-row"><span class="label">Anchor Fee</span><span class="value">$'+fmt(tx.amount*0.004,2)+'</span></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="forceCloseModal()">Close</button><button class="btn btn-primary" onclick="forceCloseModal();showToast(\'Receipt downloaded\',\'success\')">📥 Download Receipt</button></div>';
+openModal(html);
+}
+
+// ============ NAVIGATION ============
+function switchRole(role){currentRole=role;currentView='dashboard';const sel=document.getElementById('roleSelect');if(sel)sel.value=role;render();pushNotif('Switched to '+role.charAt(0).toUpperCase()+role.slice(1)+' view','info')}
+function setView(view){currentView=view;render()}
+function render(){renderSidebar();renderContent();renderNotifications()}
+
+// ============ TRANSACTION FUNCTIONS ============
+function updateSendAmount(val){
+  const u=getActiveSender(),lim=getLimit(u.tier);
+  if(!DEMO_TX)DEMO_TX={amount:parseInt(val),fromCur:u.baseCur||'AED',toCur:'NGN',status:'pending'};
+  else DEMO_TX.amount=parseInt(val);
+  render();
+}
+function updateToCurrency(cur){
+  const u=getActiveSender();
+  if(!DEMO_TX)DEMO_TX={amount:500,fromCur:u.baseCur||'AED',toCur:cur,status:'pending'};
+  else DEMO_TX.toCur=cur;
+  render();
+}
+function selectRecipient(id){
+  const r=RECIPIENTS.find(x=>x.id===id);
+  if(r){
+    const u=getActiveSender();
+    // BUG FIX 1: Auto-set corridor based on recipient's country/currency
+    const fromCur=u.baseCur||'AED';
+    const toCur=r.cur||'NGN';
+    if(!DEMO_TX)DEMO_TX={amount:500,fromCur:fromCur,toCur:toCur,status:'pending'};
+    DEMO_TX.recipient=r;
+    DEMO_TX.toCur=toCur;
+    DEMO_TX.fromCur=fromCur;
+    // Set corridor string for reference
+    DEMO_TX.corridor=fromCur+'→'+toCur;
+    showToast('Corridor set to '+fromCur+' → '+toCur+' for '+r.name,'info');
+    render();
+  }
+}
+function setSchedule(scheduled){
+  const u=getActiveSender();
+  if(!DEMO_TX)DEMO_TX={amount:500,fromCur:u.baseCur||'AED',toCur:'NGN',status:'pending'};
+  DEMO_TX.scheduled=scheduled;
+  DEMO_TX.needByType=scheduled?'scheduled':'immediate';
+  DEMO_TX.scheduledTime=scheduled?new Date(Date.now()+120000):null;
+  render();
+}
+
+function updateScheduleDate(dateStr){
+  if(!DEMO_TX)return;
+  const dt=new Date(dateStr);
+  if(dt&&!isNaN(dt.getTime())){
+    DEMO_TX.scheduledTime=dt;
+    DEMO_TX.needByDate=dateStr;
+    render();
+  }
+}
+
+function showInviteRecipientModal(){
+  const html='<div class="modal-header"><span class="modal-title">📨 Invite New Recipient</span><button class="modal-close" onclick="forceCloseModal()">✕</button></div><div class="modal-body"><div class="form-group"><label class="form-label">Recipient Name</label><input type="text" class="form-input" id="inviteName" placeholder="Enter full name"></div><div class="form-group"><label class="form-label">Country</label><select class="form-select" id="inviteCountry"><option value="Ghana">🇬🇭 Ghana</option><option value="Philippines">🇵🇭 Philippines</option><option value="India">🇮🇳 India</option><option value="Nigeria">🇳🇬 Nigeria</option><option value="Kenya">🇰🇪 Kenya</option><option value="Zimbabwe">🇿🇼 Zimbabwe</option></select></div><div class="form-group"><label class="form-label">Mobile Number</label><input type="text" class="form-input" id="invitePhone" placeholder="+xxx xxx xxx xxxx"></div><div class="form-group"><label class="form-label">Payout Method</label><select class="form-select" id="inviteMethod"><option value="Mobile Money">Mobile Money</option><option value="Bank Transfer">Bank Transfer</option><option value="Cash Pickup">Cash Pickup</option></select></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="forceCloseModal()">Cancel</button><button class="btn btn-primary" onclick="inviteNewRecipient()">Send Invite</button></div>';
+  openModal(html);
+}
+
+function inviteNewRecipient(){
+  const name=document.getElementById('inviteName')?.value;
+  const country=document.getElementById('inviteCountry')?.value;
+  const phone=document.getElementById('invitePhone')?.value;
+  const method=document.getElementById('inviteMethod')?.value;
+  if(!name||!phone){showToast('Please fill all required fields','error');return}
+  const newR={id:'RCP-'+Math.random().toString(36).substr(2,6).toUpperCase(),name,country,flag:country==='Ghana'?'🇬🇭':country==='Philippines'?'🇵🇭':country==='India'?'🇮🇳':country==='Nigeria'?'🇳🇬':country==='Kenya'?'🇰🇪':'🇿🇼',method,account:phone,cur:country==='Ghana'?'GHS':country==='Philippines'?'PHP':country==='India'?'INR':country==='Nigeria'?'NGN':country==='Kenya'?'KES':'ZWL',pending:true};
+  RECIPIENTS.push(newR);
+  forceCloseModal();
+  showToast('✉️ Invite sent to '+name,'success');
+  pushNotif('📨 Invited '+name+' to FlowBridge','info','sender');
+  pushNotif('📨 New user invitation sent','info','admin');
+  render();
+}
+
+function switchLP(lpId){
+  if(!LP_PROFILES[lpId])return;
+  activeLPId=lpId;
+  showToast('Switched to '+LP_PROFILES[lpId].name,'info');
+  render();
+}
+
+function switchAnchor(anchorId){
+  if(!ANCHOR_PROFILES[anchorId])return;
+  activeAnchorId=anchorId;
+  showToast('Switched to '+ANCHOR_PROFILES[anchorId].name,'info');
+  render();
+}
+
+// BUG FIX 3: Add receiver switching function
+function switchReceiver(receiverId){
+  if(!RECEIVER_PROFILES[receiverId])return;
+  activeReceiverId=receiverId;
+  showToast('Switched to '+RECEIVER_PROFILES[receiverId].name,'info');
+  render();
+}
+
+function toggleUserAsLP(){
+  const u=getActiveSender();
+  u.canProvideLiquidity=!u.canProvideLiquidity;
+  if(u.canProvideLiquidity){
+    u.lpCorridors=['AED_GHS','AED_NGN'];
+    showToast('✅ You can now provide liquidity as peer LP','success');
+    pushNotif('👤 '+u.name+' enabled as ad-hoc liquidity provider','info','admin');
+  }else{
+    u.lpCorridors=[];
+    showToast('Peer LP mode disabled','info');
+  }
+  render();
+}
+
+function pushStatusNotifications(oldStatus,newStatus,txId){
+  const statusMsgs={
+    'pending→matched':'🎉 Transaction matched!',
+    'matched→lp_funded':'💰 Liquidity provider funded the trade',
+    'lp_funded→payout_processing':'💳 Anchor processing payout',
+    'payout_processing→completed':'✅ Transfer completed successfully'
+  };
+  const key=oldStatus+'→'+newStatus;
+  if(statusMsgs[key]){
+    pushNotif(statusMsgs[key]+' ('+txId+')','success','sender');
+    pushNotif(statusMsgs[key]+' ('+txId+')','info','admin');
+  }
+}
+
+function submitSend(amt,from,to){
+  const u=getActiveSender(),lim=getLimit(u.tier);
+  
+  // FIX: Convert amount to USD for limit comparison
+  const amtUSD=from==='USD'?amt:amt*getRate(from,'USD');
+  const dailyUsedUSD=u.dailyUsed*(u.baseCur==='USD'?1:getRate(u.baseCur,'USD'));
+  const monthlyUsedUSD=(u.monthlyUsed||0)*(u.baseCur==='USD'?1:getRate(u.baseCur,'USD'));
+  
+  // Validate limits in USD equivalent
+  if(amtUSD>lim.perTx){showToast('Amount exceeds per-transaction limit of '+fmtCur(lim.perTx,'USD')+' ('+fmtCur(amt,from)+' = $'+fmt(amtUSD,2)+')','error');return}
+  if(amtUSD+dailyUsedUSD>lim.daily){showToast('Would exceed daily limit of '+fmtCur(lim.daily,'USD'),'error');return}
+  if(amtUSD+monthlyUsedUSD>lim.monthly){showToast('Would exceed monthly limit of '+fmtCur(lim.monthly,'USD'),'error');return}
+  // Check if user is flagged
+  if(u.flagged){showToast('Account flagged for review - transfers temporarily restricted','error');return}
+  // Create transaction
+  DEMO_TX={
+    id:'TX-'+Math.random().toString(36).substr(2,6).toUpperCase(),
+    amount:amt,fromCur:from,toCur:to,
+    recipient:DEMO_TX?.recipient||RECIPIENTS[0],
+    status:'pending',
+    scheduled:DEMO_TX?.scheduled||false,
+    needByType:DEMO_TX?.scheduled?'scheduled':'immediate',
+    scheduledTime:DEMO_TX?.scheduledTime,
+    premium:u.premium,
+    timestamp:new Date(),
+    sender:u.id
+  };
+  u.dailyUsed+=amt;
+  u.monthlyUsed=(u.monthlyUsed||0)+amt;
+  pushNotif('📤 Transfer initiated: '+fmtCur(amt,from)+' → '+to,'info','sender');
+  setView('swipe');
+  if(guidedMode&&guidedStep===0&&!freeMode)advanceGuidedStep();
+}
+
+function swipePass(){swipeIndex++;pushNotif('Passed on match opportunity','info','sender');render()}
+
+function swipeMatch(){
+  const card=SWIPE[swipeIndex];if(!card||!DEMO_TX)return;
+  // FIXED: Ensure match ALWAYS updates status
+  DEMO_TX.status='matched';
+  DEMO_TX.matchedWith=card;
+  DEMO_TX.matchTime=new Date();
+  swipeIndex++;
+  
+  // FIXED: Send notifications to ALL roles
+  pushNotif('🎉 Matched with '+card.name+'!','success','sender');
+  pushNotif('📥 New order from '+getActiveSender().name,'info','lp');
+  pushNotif('📋 New match detected','info','admin');
+  
+  // FIXED: Show modal and ensure it transitions
+  showMatchSummaryModal(card);
+  
+  // FIXED: Advance guided demo
+  if(guidedMode&&guidedStep===1&&!freeMode)advanceGuidedStep();
+  
+  // FIXED: Force render to update all views
+  render();
+}
+
+function lpAcceptOrder(){
+  if(!DEMO_TX)return;
+  
+  // FIXED: Always update status to lp_funded
+  DEMO_TX.status='lp_funded';
+  DEMO_TX.lpTime=new Date();
+  
+  // FIXED: Update LP liquidity bars consistently
+  const pair=DEMO_TX.fromCur+'_'+DEMO_TX.toCur;
+  const lpProfile=LP_PROFILES[activeLPId];
+  if(lpProfile&&lpProfile.positions[pair]){
+    lpProfile.positions[pair].locked+=DEMO_TX.amount;
+    lpProfile.positions[pair].available=Math.max(0,lpProfile.positions[pair].available-DEMO_TX.amount);
+    lpProfile.positions[pair].util=lpProfile.positions[pair].locked/(lpProfile.positions[pair].available+lpProfile.positions[pair].locked)||0;
+  }
+  if(LP_STATE[pair]){
+    LP_STATE[pair].locked+=DEMO_TX.amount;
+    LP_STATE[pair].available=Math.max(0,LP_STATE[pair].available-DEMO_TX.amount);
+    LP_STATE[pair].util=LP_STATE[pair].locked/(LP_STATE[pair].available+LP_STATE[pair].locked)||0;
+  }
+  
+  // FIXED: Increment LP revenue correctly
+  const revenue=DEMO_TX.amount*0.008;
+  LP_REVENUE+=revenue;
+  if(lpProfile)lpProfile.revenue+=revenue;
+  
+  // FIXED: Notify ALL roles
+  pushNotif('✅ Order '+DEMO_TX.id+' funded','success','lp');
+  pushNotif('💰 LP funded your transfer!','success','sender');
+  pushNotif('📥 New payout ready: '+DEMO_TX.id,'info','anchor');
+  pushNotif('📋 LP accepted order '+DEMO_TX.id,'info','admin');
+  pushNotif('💰 Payment processing...','info','receiver');
+  
+  showToast('Order funded successfully!','success');
+  
+  // FIXED: Advance guided demo
+  if(guidedMode&&guidedStep===2&&!freeMode)advanceGuidedStep();
+  
+  // FIXED: Force render
+  render();
+}
+
+function anchorProcessPayout(){
+  if(!DEMO_TX)return;
+  
+  // FIXED: Set status to payout_processing
+  DEMO_TX.status='payout_processing';
+  DEMO_TX.payoutTime=new Date();
+  
+  // FIXED: Update anchor state consistently
+  const anchorProfile=ANCHOR_PROFILES[activeAnchorId];
+  if(anchorProfile){
+    anchorProfile.pending=Math.max(0,anchorProfile.pending-1);
+    // Don't increment completed yet - wait for completion
+  }
+  if(ANCHOR_STATE.ghana){
+    ANCHOR_STATE.ghana.pending=Math.max(0,ANCHOR_STATE.ghana.pending-1);
+  }
+  
+  // FIXED: Send notifications to all roles
+  pushNotif('💳 Processing payout for '+(DEMO_TX.recipient?.name||'Kofi'),'info','anchor');
+  pushNotif('📤 Your funds are being paid out!','success','sender');
+  pushNotif('💰 Incoming payment processing...','info','receiver');
+  pushNotif('📋 Payout initiated for '+DEMO_TX.id,'info','admin');
+  
+  showToast('Payout processing...','info');
+  
+  // FIXED: Advance guided demo
+  if(guidedMode&&guidedStep===3&&!freeMode)advanceGuidedStep();
+  
+  render();
+  
+  // FIXED: After 2s, set to completed
+  setTimeout(()=>{completeTransaction()},2000);
+}
+
+function completeTransaction(){
+  if(!DEMO_TX)return;
+  
+  // FIXED: Set status to completed
+  DEMO_TX.status='completed';
+  DEMO_TX.completedTime=new Date();
+  
+  // FIXED: Update sender score
+  const u=getActiveSender();
+  if(u){
+    u.score=Math.min(100,u.score+2);
+    u.tier=getTierFromScore(u.score);
+  }
+  
+  // FIXED: Increment anchor revenue and completed count
+  const revenue=DEMO_TX.amount*0.004;
+  ANCHOR_REVENUE+=revenue;
+  const anchorProfile=ANCHOR_PROFILES[activeAnchorId];
+  if(anchorProfile){
+    anchorProfile.completed++;
+    anchorProfile.commission+=revenue;
+  }
+  if(ANCHOR_STATE.ghana){
+    ANCHOR_STATE.ghana.completed++;
+  }
+  
+  // FIXED: Record revenue
+  recordTxRevenue(DEMO_TX);
+  
+  // FIXED: Register TX in receiver history - proper object spread
+  const txCopy={
+    id:DEMO_TX.id,
+    amount:DEMO_TX.amount,
+    fromCur:DEMO_TX.fromCur,
+    toCur:DEMO_TX.toCur,
+    status:DEMO_TX.status,
+    timestamp:DEMO_TX.timestamp,
+    completedTime:DEMO_TX.completedTime,
+    recipient:DEMO_TX.recipient,
+    sender:DEMO_TX.sender,
+    premium:DEMO_TX.premium,
+    scheduled:DEMO_TX.scheduled
+  };
+  txHistory.unshift(txCopy);
+  
+  // FIXED: Notify all roles
+  pushNotif('🎉 Transfer complete!','success','sender');
+  pushNotif('✅ Payout delivered','success','anchor');
+  pushNotif('💰 Funds received!','success','receiver');
+  pushNotif('📊 Transaction '+DEMO_TX.id+' settled','info','admin');
+  
+  showCompletionModal();
+  
+  // FIXED: Advance guided demo
+  if(guidedMode&&guidedStep===4&&!freeMode)advanceGuidedStep();
+  
+  // FIXED: Force render to update receiver timeline
+  render();
+}
+
+function recordTxRevenue(tx){
+  if(!tx)return;
+  const amt=tx.amount||500,spread=0.012,lpCut=0.008,anchorCut=0.004;
+  BUSINESS_METRICS.revenueTotal+=amt*spread;
+  BUSINESS_METRICS.revenueFX+=amt*spread*0.6;
+  BUSINESS_METRICS.revenueLP+=amt*lpCut;
+  BUSINESS_METRICS.revenueAnchor+=amt*anchorCut;
+  BUSINESS_METRICS.totalVolume+=amt;
+  BUSINESS_METRICS.txCount++;
+  const savings=calculateSavings(amt,tx.fromCur||'AED',tx.toCur||'NGN');
+  TOTAL_SAVINGS+=savings;
+  updateSavingsTicker();
+}
+
+// ============ RENDER SIDEBAR ============
+function renderSidebar(){
+const sb=document.getElementById('sidebar');if(!sb)return;
+let user,nav='';
+const gp=guidedMode?'<div class="guided-progress">🎓 <span class="step">Step '+(guidedStep+1)+'/'+GUIDED_STEPS.length+'</span> '+GUIDED_STEPS[guidedStep]?.action+'</div>':'';
+
+if(currentRole==='sender'){
+  user=getActiveSender();
+  nav='<div class="nav-section">Dashboard</div><button class="nav-btn'+(currentView==='dashboard'?' active':'')+'" onclick="setView(\'dashboard\')"><span class="nav-btn-icon">📊</span>Overview</button><button class="nav-btn'+(currentView==='send'?' active':'')+'" onclick="setView(\'send\')"><span class="nav-btn-icon">💸</span>Send Money</button><button class="nav-btn'+(currentView==='swipe'?' active':'')+'" onclick="setView(\'swipe\')"><span class="nav-btn-icon">🔄</span>FlowSwipe</button><button class="nav-btn'+(currentView==='history'?' active':'')+'" onclick="setView(\'history\')"><span class="nav-btn-icon">📜</span>History'+(txHistory.length?'<span class="nav-btn-badge">'+txHistory.length+'</span>':'')+'</button><button class="nav-btn'+(currentView==='profile'?' active':'')+'" onclick="setView(\'profile\')"><span class="nav-btn-icon">👤</span>Profile</button>';
+}
+else if(currentRole==='lp'){
+  // BUG FIX 2: Use active LP profile instead of hardcoded
+  const lpProfile=LP_PROFILES[activeLPId]||LP_PROFILES.kwame;
+  user={name:lpProfile.name,avatar:lpProfile.avatar,tier:'provider',color:'#3fb950',premium:false};
+  nav='<div class="nav-section">Operations</div><button class="nav-btn'+(currentView==='dashboard'?' active':'')+'" onclick="setView(\'dashboard\')"><span class="nav-btn-icon">📊</span>Dashboard</button><button class="nav-btn'+(currentView==='orders'?' active':'')+'" onclick="setView(\'orders\')"><span class="nav-btn-icon">📋</span>Order Book'+(DEMO_TX&&DEMO_TX.status==='matched'?'<span class="nav-btn-badge">1</span>':'')+'</button><button class="nav-btn'+(currentView==='positions'?' active':'')+'" onclick="setView(\'positions\')"><span class="nav-btn-icon">💰</span>Positions</button><button class="nav-btn'+(currentView==='profile'?' active':'')+'" onclick="setView(\'profile\')"><span class="nav-btn-icon">🏢</span>Profile</button>';
+}
+else if(currentRole==='anchor'){
+  // BUG FIX 2: Use active Anchor profile instead of hardcoded
+  const anchorProfile=ANCHOR_PROFILES[activeAnchorId]||ANCHOR_PROFILES.mpesa;
+  user={name:anchorProfile.name,avatar:anchorProfile.avatar,tier:'anchor',color:'#d29922',premium:false};
+  nav='<div class="nav-section">Operations</div><button class="nav-btn'+(currentView==='dashboard'?' active':'')+'" onclick="setView(\'dashboard\')"><span class="nav-btn-icon">📊</span>Dashboard</button><button class="nav-btn'+(currentView==='payouts'?' active':'')+'" onclick="setView(\'payouts\')"><span class="nav-btn-icon">💳</span>Payouts'+(DEMO_TX&&DEMO_TX.status==='lp_funded'?'<span class="nav-btn-badge">1</span>':'')+'</button><button class="nav-btn'+(currentView==='history'?' active':'')+'" onclick="setView(\'history\')"><span class="nav-btn-icon">📜</span>History</button><button class="nav-btn'+(currentView==='profile'?' active':'')+'" onclick="setView(\'profile\')"><span class="nav-btn-icon">🔐</span>Profile</button>';
+}
+else if(currentRole==='receiver'){
+  // BUG FIX 3: Use active receiver profile instead of hardcoded
+  const receiverProfile=RECEIVER_PROFILES[activeReceiverId]||RECEIVER_PROFILES.ghana;
+  user={name:receiverProfile.name,avatar:receiverProfile.avatar,tier:'recipient',color:'#a371f7',premium:false};
+  nav='<div class="nav-section">My Money</div><button class="nav-btn'+(currentView==='dashboard'?' active':'')+'" onclick="setView(\'dashboard\')"><span class="nav-btn-icon">📊</span>Incoming</button><button class="nav-btn'+(currentView==='history'?' active':'')+'" onclick="setView(\'history\')"><span class="nav-btn-icon">📜</span>History</button><button class="nav-btn'+(currentView==='profile'?' active':'')+'" onclick="setView(\'profile\')"><span class="nav-btn-icon">👤</span>Profile</button>';
+}
+else if(currentRole==='admin'){
+  user={name:'Admin Panel',avatar:'⚙️',tier:'admin',color:'#f85149',premium:false};
+  nav='<div class="nav-section">Platform</div><button class="nav-btn'+(currentView==='dashboard'?' active':'')+'" onclick="setView(\'dashboard\')"><span class="nav-btn-icon">📊</span>Overview</button><button class="nav-btn'+(currentView==='transactions'?' active':'')+'" onclick="setView(\'transactions\')"><span class="nav-btn-icon">📋</span>Transactions</button><button class="nav-btn'+(currentView==='revenue'?' active':'')+'" onclick="setView(\'revenue\')"><span class="nav-btn-icon">💰</span>Revenue</button><button class="nav-btn'+(currentView==='corridors'?' active':'')+'" onclick="setView(\'corridors\')"><span class="nav-btn-icon">🌍</span>Corridors</button><button class="nav-btn'+(currentView==='fraud'?' active':'')+'" onclick="setView(\'fraud\')"><span class="nav-btn-icon">🛡️</span>Fraud</button>';
+}
+
+const tierBadge=user.tier==='provider'?'badge-success':user.tier==='anchor'?'badge-warning':user.tier==='admin'?'badge-danger':user.tier==='recipient'?'badge-info':'badge-'+user.tier;
+sb.innerHTML=gp+'<div class="sidebar-header"><div class="sidebar-avatar" style="background:'+user.color+'">'+user.avatar+'</div><div class="sidebar-name">'+user.name+'</div><div class="sidebar-role">'+currentRole+'</div><div class="sidebar-badges"><span class="badge '+tierBadge+'">'+user.tier+'</span>'+(user.premium?'<span class="badge badge-premium">⭐ Premium</span>':'')+'</div></div><nav class="sidebar-nav">'+nav+'</nav>';
+}
+
+// ============ RENDER CONTENT ROUTER ============
+function renderContent(){
+const c=document.getElementById('content');if(!c)return;
+try{
+if(currentRole==='sender'){
+  if(currentView==='dashboard')c.innerHTML=renderSenderDash();
+  else if(currentView==='send')c.innerHTML=renderSendMoney();
+  else if(currentView==='swipe')c.innerHTML=renderSwipeView();
+  else if(currentView==='history')c.innerHTML=renderSenderHistory();
+  else if(currentView==='profile')c.innerHTML=renderSenderProfile();
+  else c.innerHTML=renderSenderDash();
+}
+else if(currentRole==='lp'){
+  if(currentView==='dashboard')c.innerHTML=renderLPDash();
+  else if(currentView==='orders')c.innerHTML=renderLPOrders();
+  else if(currentView==='positions')c.innerHTML=renderLPPositions();
+  else if(currentView==='profile')c.innerHTML=renderLPProfile();
+  else c.innerHTML=renderLPDash();
+}
+else if(currentRole==='anchor'){
+  if(currentView==='dashboard')c.innerHTML=renderAnchorDash();
+  else if(currentView==='payouts')c.innerHTML=renderAnchorPayouts();
+  else if(currentView==='history')c.innerHTML=renderAnchorHistory();
+  else if(currentView==='profile')c.innerHTML=renderAnchorProfile();
+  else c.innerHTML=renderAnchorDash();
+}
+else if(currentRole==='receiver'){
+  if(currentView==='dashboard')c.innerHTML=renderReceiverDash();
+  else if(currentView==='history')c.innerHTML=renderReceiverHistory();
+  else if(currentView==='profile')c.innerHTML=renderReceiverProfile();
+  else c.innerHTML=renderReceiverDash();
+}
+else if(currentRole==='admin'){
+  if(currentView==='dashboard')c.innerHTML=renderAdminDash();
+  else if(currentView==='transactions')c.innerHTML=renderAdminTx();
+  else if(currentView==='revenue')c.innerHTML=renderAdminRevenue();
+  else if(currentView==='corridors')c.innerHTML=renderAdminCorridors();
+  else if(currentView==='fraud')c.innerHTML=renderAdminFraud();
+  else c.innerHTML=renderAdminDash();
+}
+}catch(e){console.error('Render error:',e);c.innerHTML='<div class="card"><div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Render Error</div></div></div>'}
+}
+
+// ============ SENDER VIEWS ============
+function renderSenderDash(){
+const u=getActiveSender(),lim=getLimit(u.tier),pct=Math.round((u.score/100)*339),offset=339-pct;
+const hl=guidedMode&&guidedStep===0&&!freeMode?' guided-highlight':'';
+
+// User selector
+const userSelector='<div class="user-selector">'+Object.entries(USERS).map(([k,usr])=>'<div class="user-pill'+(k===activeSenderId?' active':'')+'" onclick="switchSenderUser(\''+k+'\')"><span class="avatar">'+usr.avatar+'</span><span>'+usr.name.split(' ')[0]+'</span><span class="badge badge-'+usr.tier+'" style="padding:2px 6px;font-size:8px">'+usr.tier.charAt(0).toUpperCase()+'</span></div>').join('')+'</div>';
+
+return userSelector+'<div class="score-section'+hl+'"><div class="score-ring"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="54"/><circle class="progress" cx="60" cy="60" r="54" style="stroke-dashoffset:'+offset+'"/></svg><div class="score-inner"><div class="score-num">'+u.score+'</div><div class="score-lbl">FlowScore</div></div></div><div class="score-info"><div class="score-title">'+u.tier.charAt(0).toUpperCase()+u.tier.slice(1)+' Member</div><div class="score-sub">Per TX: '+fmtCur(lim.perTx,'USD')+' • Daily: '+fmtCur(lim.daily,'USD')+' • Used: '+fmtCur(u.dailyUsed,'USD')+'</div><div class="score-actions"><button class="btn btn-primary" onclick="setView(\'send\')">💸 Send Money</button><button class="btn btn-secondary" onclick="setView(\'swipe\')">🔄 FlowSwipe</button></div><div class="score-controls"><button class="score-ctrl-btn" onclick="simulateScoreChange(-10)">📉 Lower Score</button><button class="score-ctrl-btn" onclick="simulateScoreChange(10)">📈 Raise Score</button><button class="score-ctrl-btn" onclick="const u=getActiveSender();u.premium=!u.premium;render();showToast(u.premium?\'Premium enabled\':\'Premium disabled\')">⭐ Toggle Premium</button></div><div class="tier-bar"><div class="tier-item'+(u.tier==='bronze'?' active':'')+'"><div class="tier-name">Bronze</div><div class="tier-limit">$'+fmt(TIER_LIMITS.bronze.perTx,0)+'/tx</div></div><div class="tier-item'+(u.tier==='silver'?' active':'')+'"><div class="tier-name">Silver</div><div class="tier-limit">$'+fmt(TIER_LIMITS.silver.perTx,0)+'/tx</div></div><div class="tier-item'+(u.tier==='gold'?' active':'')+'"><div class="tier-name">Gold</div><div class="tier-limit">$'+fmt(TIER_LIMITS.gold.perTx,0)+'/tx</div></div><div class="tier-item'+(u.tier==='platinum'?' active':'')+'"><div class="tier-name">Platinum</div><div class="tier-limit">$'+fmt(TIER_LIMITS.platinum.perTx,0)+'/tx</div></div></div></div></div>'+renderSenderTimeline();
+}
+
+function renderSenderTimeline(){
+if(!DEMO_TX)return'<div class="card"><div class="card-header"><div class="card-title">📍 Recent Activity</div></div><div class="empty-state"><div class="empty-icon">💸</div><div class="empty-title">No active transfers</div><div class="empty-text">Start a new transfer or try FlowSwipe</div></div></div>';
+const tx=DEMO_TX,steps=[{label:'Order Created',done:true,time:tx.timestamp?.toLocaleTimeString()},{label:'Match Found',done:['matched','lp_funded','payout_processing','completed'].includes(tx.status)},{label:'LP Funded',done:['lp_funded','payout_processing','completed'].includes(tx.status)},{label:'Payout Processing',done:['payout_processing','completed'].includes(tx.status)},{label:'Complete',done:tx.status==='completed'}];
+const activeIdx=steps.findIndex(s=>!s.done);
+return'<div class="card"><div class="card-header"><div class="card-title">📍 Transfer: '+tx.id+'</div><span class="badge badge-info">'+tx.status.replace(/_/g,' ')+'</span>'+(tx.scheduled?'<span class="badge badge-scheduled">Scheduled</span>':'')+'</div><div class="timeline">'+steps.map((s,i)=>'<div class="timeline-item"><div class="timeline-dot '+(s.done?'complete':i===activeIdx?'active':'pending')+'">'+(s.done?'✓':i+1)+'</div><div class="timeline-content"><div class="timeline-title">'+s.label+'</div>'+(s.time?'<div class="timeline-time">'+s.time+'</div>':'')+'</div></div>').join('')+'</div><div style="display:flex;gap:8px;margin-top:16px"><div class="info-link" onclick="showSettlementModal()">ℹ️ How settlement works</div><div class="info-link" onclick="showSettlementTraceModal()">🔍 View settlement trace</div></div></div>';
+}
+
+function renderSendMoney(){
+const u=getActiveSender(),lim=getLimit(u.tier),fromCur=u.baseCur||'AED';
+const toCur=DEMO_TX?.toCur||'NGN',amt=DEMO_TX?.amount||500;
+const rate=getRate(fromCur,toCur),recv=amt*rate,tradRate=getTradRate(fromCur,toCur),savings=calculateSavings(amt,fromCur,toCur);
+const hl=guidedMode&&guidedStep===0&&!freeMode?' guided-highlight':'';
+
+// Limit validation
+const overLimit=amt>lim.perTx;
+const overDaily=amt+u.dailyUsed>lim.daily;
+const limitMsg=overLimit?'<div class="form-error">⚠️ Exceeds per-transaction limit ('+fmtCur(lim.perTx,'USD')+') <a onclick="showLimitInfoModal()">Why?</a></div>':overDaily?'<div class="form-error">⚠️ Would exceed daily limit ('+fmtCur(lim.daily,'USD')+') <a onclick="showLimitInfoModal()">Why?</a></div>':'';
+const trustMsg=u.score>=75&&!overLimit&&!overDaily?'<div class="form-hint">✓ Trusted user: higher limits unlocked</div>':u.score<50?'<div class="form-error">Your current risk tier limits you to '+fmtCur(lim.perTx,'USD')+' per transaction <a onclick="showLimitInfoModal()">Why?</a></div>':'';
+
+// FIX 1: Add datetime-local input for scheduling
+const scheduleInput=DEMO_TX?.scheduled?'<div class="form-group"><label class="form-label">Schedule Date & Time</label><input type="datetime-local" class="form-input" value="'+(DEMO_TX.needByDate||'')+'" onchange="updateScheduleDate(this.value)"></div>':'';
+
+// FIX 3: Add "+ Invite New" button
+const inviteBtn='<button class="btn btn-sm btn-secondary" onclick="showInviteRecipientModal()" style="width:100%;margin-top:8px">+ Invite New Recipient</button>';
+
+// FIX 5: Add peer-LP toggle
+const peerLPSection='<div class="glass-card" style="margin-top:12px;padding:12px"><div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-weight:600;font-size:12px">Peer Liquidity Provider</div><div style="font-size:10px;color:var(--text2)">Provide liquidity in your corridors</div></div><label style="cursor:pointer"><input type="checkbox" '+(u.canProvideLiquidity?'checked':'')+' onchange="toggleUserAsLP()" style="width:auto;cursor:pointer"></label></div>'+(u.canProvideLiquidity?'<div style="font-size:10px;color:var(--green);margin-top:6px">✓ Active in: '+(u.lpCorridors||[]).join(', ')+'</div>':'')+'</div>';
+
+return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">💸 Send Money</div><span style="font-size:11px;color:var(--text2)">Sending as '+u.name+'</span></div><div class="send-form"><div class="form-group"><label class="form-label">You Send</label><div class="amount-display"><span class="amount-value">'+fmt(amt,0)+'</span><span class="amount-currency">'+fromCur+'</span></div><input type="range" min="100" max="'+lim.perTx+'" step="50" value="'+amt+'" style="width:100%" onchange="updateSendAmount(this.value)">'+limitMsg+trustMsg+'</div><div class="form-group"><label class="form-label">To Country</label><select class="form-select" onchange="updateToCurrency(this.value)"><option value="NGN"'+(toCur==='NGN'?' selected':'')+'>🇳🇬 Nigeria (NGN)</option><option value="GHS"'+(toCur==='GHS'?' selected':'')+'>🇬🇭 Ghana (GHS)</option><option value="INR"'+(toCur==='INR'?' selected':'')+'>🇮🇳 India (INR)</option><option value="PHP"'+(toCur==='PHP'?' selected':'')+'>🇵🇭 Philippines (PHP)</option><option value="KES"'+(toCur==='KES'?' selected':'')+'>🇰🇪 Kenya (KES)</option><option value="ZWL"'+(toCur==='ZWL'?' selected':'')+'>🇿🇼 Zimbabwe (ZWL)</option><option value="MXN"'+(toCur==='MXN'?' selected':'')+'>🇲🇽 Mexico (MXN)</option></select></div><div class="rate-info"><span>Exchange Rate</span><span class="rate-value">1 '+fromCur+' = '+fmt(rate,2)+' '+toCur+'</span></div><div class="receive-amount"><span class="receive-flag">'+(CURRENCIES[toCur]?.flag||'🌍')+'</span><div><div class="receive-value">'+fmt(recv,2)+'</div><div class="receive-currency">'+toCur+' received</div></div></div><div class="competitor-compare"><div class="title">Rate Comparison</div><div class="competitor-row best"><span class="name">⚡ FlowBridge</span><span class="rate">'+fmt(rate,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Wise</span><span class="rate">'+fmt(rate*0.988,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Western Union</span><span class="rate">'+fmt(rate*0.955,2)+' '+toCur+'</span></div><div class="competitor-row worst"><span class="name">Bank Wire</span><span class="rate">'+fmt(tradRate,2)+' '+toCur+'</span></div></div><div class="speed-compare"><div class="speed-item highlight"><div class="label">FlowBridge</div><div class="time">< 5 min</div></div><div class="speed-item"><div class="label">Traditional</div><div class="time">2-3 days</div></div></div>'+(savings>0?'<div class="savings-highlight"><div class="amount">+'+fmtCur(savings,toCur)+'</div><div class="label">You save vs bank wire</div></div>':'')+'<div class="form-group" style="margin-top:16px"><label class="form-label">Recipient</label>'+RECIPIENTS.slice(0,4).map(r=>'<div class="recipient-card'+(DEMO_TX?.recipient?.id===r.id?' selected':'')+'" onclick="selectRecipient(\''+r.id+'\')"><div class="recipient-avatar" style="background:var(--bg4)">'+r.flag+'</div><div class="recipient-info"><div class="recipient-name">'+r.name+(r.pending?' <span class="badge badge-warning" style="font-size:9px">Pending</span>':'')+'</div><div class="recipient-detail">'+r.method+' • '+r.account+'</div></div></div>').join('')+inviteBtn+'</div><div class="form-group"><label class="form-label">Schedule</label><div class="grid-2"><label class="schedule-option'+((!DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" checked onclick="setSchedule(false)"><span>🚀 Send Now</span></label><label class="schedule-option'+((DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" onclick="setSchedule(true)"><span>⏰ Schedule</span></label></div></div>'+scheduleInput+peerLPSection+'<button class="btn btn-primary btn-lg" style="width:100%"'+(overLimit||overDaily?' disabled':'')+' onclick="submitSend('+amt+',\''+fromCur+'\',\''+toCur+'\')">Continue to FlowSwipe →</button></div></div>';
+}
+
+function renderSwipeView(){
+// BUG FIX 4: Filter swipe cards by active corridor
+let filteredSwipe=SWIPE;
+if(DEMO_TX&&DEMO_TX.fromCur&&DEMO_TX.toCur){
+  const targetCorridor=DEMO_TX.fromCur+'→'+DEMO_TX.toCur;
+  filteredSwipe=SWIPE.filter(card=>(card.from+'→'+card.to)===targetCorridor);
+  if(filteredSwipe.length===0){
+    // Fallback: show similar corridors (same toCur)
+    filteredSwipe=SWIPE.filter(card=>card.to===DEMO_TX.toCur);
+  }
+}
+if(swipeIndex>=filteredSwipe.length)return'<div class="card"><div class="empty-state"><div class="empty-icon">✨</div><div class="empty-title">All caught up!</div><div class="empty-text">'+(DEMO_TX&&DEMO_TX.corridor?'No more matches for '+DEMO_TX.corridor+' corridor':'Check back later for new matches')+'</div><button class="btn btn-secondary" onclick="swipeIndex=0;render()">Reset Cards</button></div></div>';
+const cards=filteredSwipe.slice(swipeIndex,swipeIndex+3).reverse();
+const hl=guidedMode&&guidedStep===1&&!freeMode?' guided-highlight':'';
+const corridorMsg=DEMO_TX&&DEMO_TX.corridor?' <span class="badge badge-info" style="margin-left:8px">'+DEMO_TX.corridor+'</span>':'';
+return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">🔄 FlowSwipe'+corridorMsg+'</div><span class="badge badge-info">'+cards.length+' matches</span></div><div class="swipe-container" id="swipeContainer">'+cards.map((card,i)=>{const zIdx=cards.length-i,scale=1-i*0.03,yOff=i*8;return'<div class="swipe-card" id="card-'+card.id+'" style="z-index:'+zIdx+';transform:scale('+scale+') translateY('+yOff+'px)" data-id="'+card.id+'"><div class="header"><div class="user-info"><div class="avatar" style="background:'+card.avatar+'">'+card.name.charAt(0)+'</div><div><div class="name">'+card.name+'</div><div class="location">'+card.flag+' sending to '+CURRENCIES[card.to]?.flag+'</div></div></div><span class="badge badge-success">'+card.score+' score</span></div><div class="amount-section"><div class="amount">'+fmtCur(card.amount,card.from)+'</div><div class="conversion">→ '+fmt(card.amount*card.rate,0)+' '+card.to+'</div><div class="corridor-label">'+card.from+' → '+card.to+' corridor</div></div><div class="details"><div class="detail-item"><div class="detail-label">Rate</div><div class="detail-value">'+fmt(card.rate,2)+'</div></div><div class="detail-item"><div class="detail-label">Need by</div><div class="detail-value">'+card.time+'</div></div><div class="detail-item"><div class="detail-label">FlowScore</div><div class="detail-value" style="color:var(--green)">'+card.score+'</div></div><div class="detail-item"><div class="detail-label">Match</div><div class="detail-value" style="color:var(--accent)">98%</div></div></div></div>'}).join('')+'</div><div class="swipe-actions"><button class="swipe-btn pass" onclick="swipePass()">✕</button><button class="swipe-btn match" onclick="swipeMatch()">✓</button></div><div class="swipe-hint">← Swipe left to pass • Swipe right to match →</div></div>';
+}
+
+function renderSenderHistory(){
+const items=txHistory.filter(t=>!t.pattern);
+if(!items.length&&!DEMO_TX)return'<div class="card"><div class="card-header"><div class="card-title">📜 Transaction History</div><button class="btn btn-sm btn-secondary" onclick="showToast(\'History exported\',\'success\')">📊 Export</button></div><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No transactions yet</div><div class="empty-text">Your completed transfers will appear here</div></div></div>';
+const all=DEMO_TX?[DEMO_TX,...items]:items;
+return'<div class="card"><div class="card-header"><div class="card-title">📜 Transaction History</div><span class="badge badge-info">'+all.length+' transfers</span><button class="btn btn-sm btn-secondary" onclick="showToast(\'History exported\',\'success\')">📊 Export</button></div>'+all.map(tx=>'<div class="tx-row" onclick="showTxDetailModal({id:\''+tx.id+'\',amount:'+tx.amount+',fromCur:\''+tx.fromCur+'\',toCur:\''+(tx.toCur||'NGN')+'\',status:\''+(tx.status||'pending')+'\',timestamp:new Date(\''+tx.timestamp+'\')})"><div class="tx-icon" style="background:rgba(88,166,255,0.1)">'+(CURRENCIES[tx.toCur]?.flag||'💸')+'</div><div class="tx-info"><div class="tx-title">'+tx.id+' <span class="badge badge-'+(tx.status==='completed'?'success':'info')+'">'+tx.status+'</span>'+(tx.scheduled?' <span class="badge badge-scheduled">Scheduled</span>':'')+'</div><div class="tx-detail">'+(tx.fromCur||'AED')+' → '+(tx.toCur||'NGN')+' • '+(tx.timestamp?.toLocaleString()||'Just now')+'</div></div><div class="tx-amount"><div class="tx-value">'+fmtCur(tx.amount||500,tx.fromCur||'AED')+'</div><div class="tx-status">→ '+fmt((tx.amount||500)*getRate(tx.fromCur||'AED',tx.toCur||'NGN'),0)+' '+(tx.toCur||'NGN')+'</div></div></div>').join('')+'</div>';
+}
+
+function renderSenderProfile(){
+const u=getActiveSender();
+const lim=getLimit(u.tier);
+return'<div class="card"><div class="card-header"><div class="card-title">👤 Sender Profile</div><span class="kyc-status kyc-verified">✓ KYC Verified</span></div><div class="profile-header"><div class="profile-avatar" style="background:'+u.color+'">'+u.avatar+'</div><div class="profile-info"><div class="profile-name">'+u.name+'</div><div class="profile-meta">'+u.id+' • '+u.email+' • Dubai, UAE</div><div class="profile-badges"><span class="badge badge-'+u.tier+'">'+u.tier.toUpperCase()+' Tier</span><span class="badge badge-info">FlowScore: '+u.score+'</span>'+(u.premium?'<span class="badge badge-premium">⭐ Premium</span>':'')+'</div></div><button class="btn btn-secondary btn-sm" onclick="showToast(\'KYC details viewed\',\'info\')">View KYC Details</button></div><div class="grid-2"><div class="glass-card"><div style="font-weight:600;margin-bottom:12px">Personal Information</div><div style="font-size:13px;line-height:1.8;color:var(--text2)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Full Name:</span><span style="color:var(--text)">'+u.name+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Email:</span><span style="color:var(--text)">'+u.email+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Base Currency:</span><span style="color:var(--text)">'+u.baseCur+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Tier:</span><span style="color:var(--text)">'+u.tier.toUpperCase()+'</span></div><div style="display:flex;justify-content:space-between"><span>Member Since:</span><span style="color:var(--text)">Jan 2024</span></div></div></div><div class="glass-card"><div style="font-weight:600;margin-bottom:12px">Account Status</div><div style="font-size:13px;line-height:1.8;color:var(--text2)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>FlowScore:</span><span style="color:var(--green)">'+u.score+'/100</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Daily Limit:</span><span style="color:var(--text)">'+fmtCur(lim.daily,'USD')+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Daily Used:</span><span style="color:var(--text)">'+fmtCur(u.dailyUsed,'USD')+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Monthly Used:</span><span style="color:var(--text)">'+fmtCur(u.monthlyUsed||0,'USD')+'</span></div><div style="display:flex;justify-content:space-between"><span>Premium:</span><span style="color:'+(u.premium?'var(--green)':'var(--text2)')+'">'+(u.premium?'Active':'Inactive')+'</span></div></div></div></div><div style="margin-top:16px"><div style="font-weight:600;margin-bottom:12px;font-size:14px">📄 Verified Documents</div><div class="doc-item"><div class="doc-info"><div class="doc-icon">🪪</div><div class="doc-details"><div class="doc-name">Emirates ID</div><div class="doc-meta">Verified on Dec 1, 2024 • Expires: Dec 2027</div></div></div><span class="badge badge-success">Verified</span></div><div class="doc-item"><div class="doc-info"><div class="doc-icon">🛂</div><div class="doc-details"><div class="doc-name">Passport</div><div class="doc-meta">Verified on Dec 1, 2024 • Expires: Aug 2029</div></div></div><span class="badge badge-success">Verified</span></div><div class="doc-item"><div class="doc-info"><div class="doc-icon">🏠</div><div class="doc-details"><div class="doc-name">Proof of Address</div><div class="doc-meta">Utility Bill • Verified on Dec 1, 2024</div></div></div><span class="badge badge-success">Verified</span></div><div class="doc-item"><div class="doc-info"><div class="doc-icon">🤳</div><div class="doc-details"><div class="doc-name">Selfie Verification</div><div class="doc-meta">Biometric match • Verified on Dec 1, 2024</div></div></div><span class="badge badge-success">Verified</span></div></div></div>';
+}
+
+function renderLPProfile(){
+const lpProfile=LP_PROFILES[activeLPId];
+return'<div class="card"><div class="card-header"><div class="card-title">🏢 LP Profile</div><span class="kyc-status kyc-verified">✓ Business Verified</span></div><div class="profile-header"><div class="profile-avatar" style="background:#3fb950">'+lpProfile.avatar+'</div><div class="profile-info"><div class="profile-name">'+lpProfile.name+'</div><div class="profile-meta">LP-'+lpProfile.region.toUpperCase()+'-001 • '+lpProfile.region+' Region</div><div class="profile-badges"><span class="badge badge-success">Liquidity Provider</span><span class="badge badge-info">$'+fmt(Object.values(lpProfile.positions).reduce((a,p)=>a+p.available+p.locked,0),0)+' Liquidity</span><span class="badge" style="background:var(--green);color:#fff">Active</span></div></div><button class="btn btn-secondary btn-sm" onclick="showToast(\'Business details viewed\',\'info\')">Business Details</button></div><div class="grid-2"><div class="glass-card"><div style="font-weight:600;margin-bottom:12px">Business Information</div><div style="font-size:13px;line-height:1.8;color:var(--text2)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Entity Name:</span><span style="color:var(--text)">'+lpProfile.name+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Region:</span><span style="color:var(--text)">'+lpProfile.region+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Corridors:</span><span style="color:var(--text)">'+Object.keys(lpProfile.positions).length+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Total Liquidity:</span><span style="color:var(--text)">$'+fmt(Object.values(lpProfile.positions).reduce((a,p)=>a+p.available+p.locked,0),0)+'</span></div><div style="display:flex;justify-content:space-between"><span>Partner Since:</span><span style="color:var(--text)">Apr 2022</span></div></div></div><div class="glass-card"><div style="font-weight:600;margin-bottom:12px">Compliance Status</div><div style="font-size:13px;line-height:1.8;color:var(--text2)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>AML Screening:</span><span class="badge badge-success">Passed</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>License Status:</span><span class="badge badge-success">Active</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Last Audit:</span><span style="color:var(--text)">Nov 2024</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Total Revenue:</span><span style="color:var(--green)">$'+fmt(lpProfile.revenue,0)+'</span></div><div style="display:flex;justify-content:space-between"><span>Active Since:</span><span style="color:var(--text)">Apr 2022</span></div></div></div></div><div style="margin-top:16px"><div style="font-weight:600;margin-bottom:12px;font-size:14px">📋 Business Documents</div><div class="doc-item"><div class="doc-info"><div class="doc-icon">🏢</div><div class="doc-details"><div class="doc-name">Business Registration Certificate</div><div class="doc-meta">Verified on Apr 15, 2024 • Valid</div></div></div><span class="badge badge-success">Verified</span></div><div class="doc-item"><div class="doc-info"><div class="doc-icon">📜</div><div class="doc-details"><div class="doc-name">Financial Services License</div><div class="doc-meta">Regulatory Authority • Verified on Apr 15, 2024</div></div></div><span class="badge badge-success">Verified</span></div><div class="doc-item"><div class="doc-info"><div class="doc-icon">👥</div><div class="doc-details"><div class="doc-name">Director Identification</div><div class="doc-meta">Directors verified • Last updated Apr 2024</div></div></div><span class="badge badge-success">Verified</span></div><div class="doc-item"><div class="doc-info"><div class="doc-icon">💼</div><div class="doc-details"><div class="doc-name">Proof of Funds</div><div class="doc-meta">Bank statements • Verified on Nov 2024</div></div></div><span class="badge badge-success">Verified</span></div></div></div>';
+}
+
+function renderAnchorProfile(){
+const anchorProfile=ANCHOR_PROFILES[activeAnchorId];
+return'<div class="card"><div class="card-header"><div class="card-title">🔐 Anchor Profile</div><span class="kyc-status kyc-verified">✓ Regulatory Approved</span></div><div class="profile-header"><div class="profile-avatar" style="background:#d29922">'+anchorProfile.avatar+'</div><div class="profile-info"><div class="profile-name">'+anchorProfile.name+'</div><div class="profile-meta">ANC-'+anchorProfile.country.substring(0,2).toUpperCase()+'-001 • '+anchorProfile.country+'</div><div class="profile-badges"><span class="badge badge-warning">Anchor Partner</span><span class="badge badge-info">'+anchorProfile.completed+' Completed</span><span class="badge" style="background:var(--green);color:#fff">Active</span></div></div></div><div class="grid-2"><div class="glass-card"><div style="font-weight:600;margin-bottom:12px">Partner Information</div><div style="font-size:13px;line-height:1.8;color:var(--text2)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Legal Entity:</span><span style="color:var(--text)">'+anchorProfile.name+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Country:</span><span style="color:var(--text)">'+anchorProfile.country+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Currency:</span><span style="color:var(--text)">'+anchorProfile.currency+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Coverage:</span><span style="color:var(--text)">Nationwide</span></div><div style="display:flex;justify-content:space-between"><span>Partner Since:</span><span style="color:var(--text)">May 2023</span></div></div></div><div class="glass-card"><div style="font-weight:600;margin-bottom:12px">Operational Metrics</div><div style="font-size:13px;line-height:1.8;color:var(--text2)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Pending Payouts:</span><span style="color:var(--yellow)">'+anchorProfile.pending+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Completed Today:</span><span style="color:var(--green)">'+anchorProfile.completed+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Balance:</span><span style="color:var(--text)">'+CURRENCIES[anchorProfile.currency].symbol+fmt(anchorProfile.balance,0)+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Commission Earned:</span><span style="color:var(--green)">$'+fmt(anchorProfile.commission,0)+'</span></div><div style="display:flex;justify-content:space-between"><span>Success Rate:</span><span style="color:var(--green)">99.8%</span></div></div></div></div><div style="margin-top:16px"><div style="font-weight:600;margin-bottom:12px;font-size:14px">🔐 Compliance Documents</div><div class="doc-item"><div class="doc-info"><div class="doc-icon">🏛️</div><div class="doc-details"><div class="doc-name">Central Bank License</div><div class="doc-meta">Central Bank • Valid until 2027</div></div></div><span class="badge badge-success">Active</span></div><div class="doc-item"><div class="doc-info"><div class="doc-icon">✅</div><div class="doc-details"><div class="doc-name">AML/CFT Certification</div><div class="doc-meta">Verified on Oct 2024 • Annual renewal</div></div></div><span class="badge badge-success">Current</span></div><div class="doc-item"><div class="doc-info"><div class="doc-icon">📊</div><div class="doc-details"><div class="doc-name">Audit Report 2024</div><div class="doc-meta">Independent Auditor • Submitted Nov 2024</div></div></div><span class="badge badge-success">Approved</span></div></div></div>';
+}
+
+function renderReceiverProfile(){
+const receiverProfile=RECEIVER_PROFILES[activeReceiverId];
+return'<div class="card"><div class="card-header"><div class="card-title">👤 Receiver Profile</div><span class="kyc-status kyc-verified">✓ Identity Verified</span></div><div class="profile-header"><div class="profile-avatar" style="background:#a371f7">'+receiverProfile.avatar+'</div><div class="profile-info"><div class="profile-name">'+receiverProfile.name+'</div><div class="profile-meta">RCV-'+receiverProfile.country.substring(0,2).toUpperCase()+'-001 • '+receiverProfile.country+'</div><div class="profile-badges"><span class="badge badge-info">Receiver</span><span class="badge badge-success">'+receiverProfile.method+'</span></div></div></div><div class="grid-2"><div class="glass-card"><div style="font-weight:600;margin-bottom:12px">Personal Information</div><div style="font-size:13px;line-height:1.8;color:var(--text2)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Full Name:</span><span style="color:var(--text)">'+receiverProfile.name+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Country:</span><span style="color:var(--text)">'+receiverProfile.country+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Currency:</span><span style="color:var(--text)">'+receiverProfile.currency+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Payment Method:</span><span style="color:var(--text)">'+receiverProfile.method+'</span></div><div style="display:flex;justify-content:space-between"><span>Account Balance:</span><span style="color:var(--green)">'+CURRENCIES[receiverProfile.currency].symbol+fmt(receiverProfile.balance,0)+'</span></div></div></div><div class="glass-card"><div style="font-weight:600;margin-bottom:12px">Receiving History</div><div style="font-size:13px;line-height:1.8;color:var(--text2)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Total Received:</span><span style="color:var(--green)">'+CURRENCIES[receiverProfile.currency].symbol+fmt(receiverProfile.balance,0)+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Transactions:</span><span style="color:var(--text)">'+txHistory.filter(t=>t.status==='completed').length+'</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Avg Amount:</span><span style="color:var(--text)">'+CURRENCIES[receiverProfile.currency].symbol+'500</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Last Received:</span><span style="color:var(--text)">3 days ago</span></div><div style="display:flex;justify-content:space-between"><span>Status:</span><span class="badge badge-success">Active</span></div></div></div></div><div style="margin-top:16px"><div style="font-weight:600;margin-bottom:12px;font-size:14px">📄 Identity Documents</div><div class="doc-item"><div class="doc-info"><div class="doc-icon">🪪</div><div class="doc-details"><div class="doc-name">National ID</div><div class="doc-meta">Verified on Sep 15, 2024</div></div></div><span class="badge badge-success">Verified</span></div><div class="doc-item"><div class="doc-info"><div class="doc-icon">📱</div><div class="doc-details"><div class="doc-name">Mobile Number Verification</div><div class="doc-meta">Registered SIM • Verified Sep 2024</div></div></div><span class="badge badge-success">Verified</span></div><div class="doc-item"><div class="doc-info"><div class="doc-icon">🏦</div><div class="doc-details"><div class="doc-name">'+receiverProfile.method+' Account</div><div class="doc-meta">'+receiverProfile.country+' • Active</div></div></div><span class="badge badge-success">Active</span></div></div></div>';
+}
+
+// ============ LP VIEWS ============
+function renderLPDash(){
+const lpProfile=LP_PROFILES[activeLPId];
+const totalAvail=Object.values(lpProfile.positions).reduce((a,p)=>a+p.available,0),totalLocked=Object.values(lpProfile.positions).reduce((a,p)=>a+p.locked,0);
+// FIX 2: Add LP profile switcher
+const lpSelector='<div class="user-selector">'+Object.entries(LP_PROFILES).map(([k,lp])=>'<div class="user-pill'+(k===activeLPId?' active':'')+'" onclick="switchLP(\''+k+'\')"><span class="avatar">'+lp.avatar+'</span><span>'+lp.name+'</span></div>').join('')+'</div>';
+return lpSelector+'<div class="grid-4"><div class="stat-card green"><div class="stat-icon">💰</div><div class="stat-value">$'+fmt(totalAvail+totalLocked,0)+'</div><div class="stat-label">Total Liquidity</div><div class="stat-change up">+12%</div></div><div class="stat-card"><div class="stat-icon">🔒</div><div class="stat-value">$'+fmt(totalLocked,0)+'</div><div class="stat-label">Currently Locked</div></div><div class="stat-card yellow"><div class="stat-icon">📊</div><div class="stat-value">'+fmt(totalLocked/(totalAvail+totalLocked)*100,1)+'%</div><div class="stat-label">Utilization</div></div><div class="stat-card purple"><div class="stat-icon">⭐</div><div class="stat-value">$'+fmt(lpProfile.revenue,0)+'</div><div class="stat-label">Revenue Earned</div></div></div><div class="card"><div class="card-header"><div class="card-title">📋 Active Positions</div><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="showAddLiquidityModal()">+ Add</button><button class="btn btn-sm btn-secondary" onclick="showWithdrawModal()">Withdraw</button></div></div>'+Object.entries(lpProfile.positions).slice(0,3).map(([pair,pos])=>'<div class="position-card" onclick="showToast(\''+pair.replace(/_/g,' → ')+': '+Math.round(pos.util*100)+'% utilized\',\'info\')"><div class="position-header"><span class="position-pair">'+pair.replace(/_/g,' → ')+'</span><span class="position-util">'+fmt(pos.util*100,0)+'% utilized</span></div><div class="position-bar"><div class="position-fill" style="width:'+pos.util*100+'%;background:linear-gradient(90deg,var(--accent),var(--green))"></div></div><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-top:8px"><span>Available: $'+fmt(pos.available,0)+'</span><span>Locked: $'+fmt(pos.locked,0)+'</span></div></div>').join('')+'</div><div class="investor-highlight"><div class="title">💡 LP Opportunity</div><div class="value">$'+fmt(lpProfile.revenue,0)+' earned</div><div class="sub">Avg 1.2% yield per completed transaction • Low risk, high liquidity</div></div>';
+}
+
+function renderLPOrders(){
+const showDemo=DEMO_TX&&['matched','pending'].includes(DEMO_TX.status);
+const orders=[{id:'ORD-4521',corridor:'AED→NGN',amount:2500,rate:431.5,score:85},{id:'ORD-4520',corridor:'USD→INR',amount:1800,rate:83.2,score:78},{id:'ORD-4519',corridor:'AED→PHP',amount:1200,rate:15.2,score:82},{id:'ORD-4518',corridor:'GBP→ZWL',amount:600,rate:461,score:74},{id:'ORD-4517',corridor:'AED→GHS',amount:900,rate:4.21,score:80}];
+const hl=guidedMode&&guidedStep===2&&!freeMode?' guided-highlight':'';
+return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">📋 Order Book</div><span class="badge badge-info">'+(showDemo?orders.length+1:orders.length)+' orders</span><button class="btn btn-sm btn-secondary" onclick="showToast(\'Order book exported\',\'success\')">📊 Export</button></div>'+(showDemo?'<div class="order-item highlight new"><div class="order-corridor">'+(CURRENCIES[DEMO_TX.fromCur]?.flag||'🌍')+' → '+(CURRENCIES[DEMO_TX.toCur]?.flag||'🌍')+'</div><div class="order-details"><div class="order-amount">'+fmtCur(DEMO_TX.amount,DEMO_TX.fromCur)+' • '+DEMO_TX.id+'</div><div class="order-rate">Rate: '+fmt(getRate(DEMO_TX.fromCur,DEMO_TX.toCur),2)+' '+(DEMO_TX.premium?'<span class="badge badge-premium">Priority</span>':'')+' '+(DEMO_TX.scheduled?'<span class="badge badge-scheduled">Scheduled</span>':'')+'</div></div><div class="order-score"><div class="order-score-value">'+getActiveSender().score+'</div><div class="order-score-label">score</div></div><button class="btn btn-sm btn-success" onclick="lpAcceptOrder()">Accept</button></div>':'')+orders.map(o=>'<div class="order-item" onclick="showToast(\'Order '+o.id+': '+o.corridor+', $'+o.amount+'\',\'info\')"><div class="order-corridor">'+o.corridor.split('→').map(c=>CURRENCIES[c.trim()]?.flag||'🌍').join(' → ')+'</div><div class="order-details"><div class="order-amount">$'+fmt(o.amount,0)+' • '+o.id+'</div><div class="order-rate">Rate: '+fmt(o.rate,2)+'</div></div><div class="order-score"><div class="order-score-value">'+o.score+'</div><div class="order-score-label">score</div></div><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();showToast(\'Accepted order '+o.id+'\',\'success\')">Accept</button></div>').join('')+'</div>';
+}
+
+function renderLPPositions(){
+return'<div class="card"><div class="card-header"><div class="card-title">💰 Liquidity Positions</div><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="showAddLiquidityModal()">+ Add Liquidity</button><button class="btn btn-sm btn-secondary" onclick="showWithdrawModal()">Withdraw</button><button class="btn btn-sm btn-secondary" onclick="showToast(\'Positions exported\',\'success\')">📊 Export</button></div></div>'+Object.entries(LP_STATE).map(([pair,pos])=>'<div class="position-card" onclick="showToast(\''+pair.replace(/_/g,' → ')+': $'+fmt(pos.available,0)+' available\',\'info\')"><div class="position-header"><span class="position-pair">'+pair.replace(/_/g,' → ')+'</span><span class="position-util">'+fmt(pos.util*100,0)+'% utilized</span></div><div class="position-bar"><div class="position-fill" style="width:'+pos.util*100+'%;background:linear-gradient(90deg,var(--accent),var(--green))"></div></div><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-top:8px"><span>Available: $'+fmt(pos.available,0)+'</span><span>Locked: $'+fmt(pos.locked,0)+'</span><span>Rate: '+fmt(pos.rate,2)+'</span></div></div>').join('')+'</div>';
+}
+
+// ============ ANCHOR VIEWS ============
+function renderAnchorDash(){
+const anchorProfile=ANCHOR_PROFILES[activeAnchorId];
+// FIX 2: Add Anchor profile switcher
+const anchorSelector='<div class="user-selector">'+Object.entries(ANCHOR_PROFILES).map(([k,anc])=>'<div class="user-pill'+(k===activeAnchorId?' active':'')+'" onclick="switchAnchor(\''+k+'\')"><span class="avatar">'+anc.avatar+'</span><span>'+anc.name+'</span></div>').join('')+'</div>';
+return anchorSelector+'<div class="grid-4"><div class="stat-card yellow"><div class="stat-icon">⏳</div><div class="stat-value">'+anchorProfile.pending+'</div><div class="stat-label">Pending Payouts</div></div><div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value">'+anchorProfile.completed+'</div><div class="stat-label">Completed Today</div></div><div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">'+CURRENCIES[anchorProfile.currency].symbol+fmt(anchorProfile.balance,0)+'</div><div class="stat-label">'+anchorProfile.currency+' Balance</div></div><div class="stat-card purple"><div class="stat-icon">⭐</div><div class="stat-value">$'+fmt(anchorProfile.commission,0)+'</div><div class="stat-label">Revenue Earned</div></div></div><div class="card"><div class="card-header"><div class="card-title">📍 Service Area</div><button class="btn btn-sm btn-secondary" onclick="showToast(\'Service area details\',\'info\')">View Details</button></div><div class="glass-card"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:32px">'+anchorProfile.avatar+'</span><div><div style="font-weight:600">'+anchorProfile.country+' - '+anchorProfile.name+'</div><div style="font-size:12px;color:var(--text2)">Mobile Money • Bank Transfer • Cash Pickup</div></div></div></div></div><div class="investor-highlight"><div class="title">💡 Anchor Economics</div><div class="value">$'+fmt(anchorProfile.commission,0)+' earned</div><div class="sub">0.4% fee per payout • $'+fmt(anchorProfile.commission,0)+' commission today • Low overhead, high volume</div></div>';
+}
+
+function renderAnchorPayouts(){
+const showDemo=DEMO_TX&&DEMO_TX.status==='lp_funded';
+const payouts=[{id:'PAY-891',amount:8500,cur:'GHS',method:'Mobile Money',recipient:'Kwame A.',status:'ready'},{id:'PAY-890',amount:12300,cur:'GHS',method:'Bank Transfer',recipient:'Ama K.',status:'pending'}];
+const hl=guidedMode&&guidedStep===3&&!freeMode?' guided-highlight':'';
+return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">💳 Pending Payouts</div><span class="badge badge-warning">'+(showDemo?payouts.length+1:payouts.length)+' pending</span><button class="btn btn-sm btn-secondary" onclick="showToast(\'Payouts exported\',\'success\')">📊 Export</button></div>'+(showDemo?'<div class="payout-card ready"><div class="payout-header"><span class="payout-amount">₵'+fmt((DEMO_TX.amount||500)*getRate(DEMO_TX.fromCur||'AED',DEMO_TX.toCur||'GHS'),0)+'</span><span class="badge badge-success">Ready</span>'+(DEMO_TX.scheduled?'<span class="badge badge-scheduled">Scheduled</span>':'')+'</div><div class="payout-details"><div><span class="payout-label">TX ID: </span>'+DEMO_TX.id+'</div><div><span class="payout-label">Recipient: </span>'+(DEMO_TX.recipient?.name||'Kofi Mensah')+'</div><div><span class="payout-label">Method: </span>'+(DEMO_TX.recipient?.method||'Mobile Money')+'</div><div><span class="payout-label">LP: </span>Apex Liquidity</div></div><button class="btn btn-success" style="width:100%;margin-top:12px" onclick="anchorProcessPayout()">Process Payout</button></div>':'')+payouts.map(p=>'<div class="payout-card '+(p.status==='ready'?'ready':'pending')+'" onclick="showPayoutDetailModal({id:\''+p.id+'\',amount:'+p.amount+',recipient:\''+p.recipient+'\',status:\''+p.status+'\'})"><div class="payout-header"><span class="payout-amount">₵'+fmt(p.amount,0)+'</span><span class="badge badge-'+(p.status==='ready'?'success':'warning')+'">'+p.status+'</span></div><div class="payout-details"><div><span class="payout-label">ID: </span>'+p.id+'</div><div><span class="payout-label">To: </span>'+p.recipient+'</div><div><span class="payout-label">Method: </span>'+p.method+'</div></div><button class="btn btn-sm btn-'+(p.status==='ready'?'success':'secondary')+'" style="width:100%;margin-top:12px" onclick="event.stopPropagation();showToast(\'Processing '+p.id+'\',\'info\')">'+(p.status==='ready'?'Process':'Pending LP')+'</button></div>').join('')+'</div>';
+}
+
+function renderAnchorHistory(){
+const history=[{id:'PAY-889',amount:15200,recipient:'Yaw B.',status:'completed',time:'10:45 AM'},{id:'PAY-888',amount:8900,recipient:'Akua M.',status:'completed',time:'10:32 AM'},{id:'PAY-DELAY',amount:22000,recipient:'Manual Review',status:'delayed',time:'09:15 AM'},{id:'PAY-887',amount:11500,recipient:'Kofi D.',status:'completed',time:'09:28 AM'}];
+return'<div class="card"><div class="card-header"><div class="card-title">📜 Payout History</div><span class="badge badge-info">'+history.length+' today</span><button class="btn btn-sm btn-secondary" onclick="showToast(\'History exported\',\'success\')">📊 Export</button></div>'+history.map(h=>'<div class="tx-row'+(h.status==='delayed'?' suspicious':'')+'" onclick="showPayoutDetailModal({id:\''+h.id+'\',amount:'+h.amount+',recipient:\''+h.recipient+'\',status:\''+h.status+'\'})"><div class="tx-icon" style="background:'+(h.status==='completed'?'rgba(63,185,80,0.1)':h.status==='delayed'?'rgba(210,153,34,0.1)':'rgba(88,166,255,0.1)')+'">🇬🇭</div><div class="tx-info"><div class="tx-title">'+h.id+' <span class="badge badge-'+(h.status==='completed'?'success':h.status==='delayed'?'warning':'info')+'">'+h.status+'</span></div><div class="tx-detail">To: '+h.recipient+' • '+h.time+'</div></div><div class="tx-amount"><div class="tx-value">₵'+fmt(h.amount,0)+'</div></div></div>').join('')+'</div>';
+}
+
+// ============ RECEIVER VIEWS ============
+function renderReceiverDash(){
+const showIncoming=DEMO_TX&&['lp_funded','payout_processing','completed'].includes(DEMO_TX.status);
+const status=DEMO_TX?.status;
+const hl=guidedMode&&guidedStep===4&&!freeMode?' guided-highlight':'';
+
+// BUG FIX 3: Add receiver profile switcher
+const receiverProfile=RECEIVER_PROFILES[activeReceiverId]||RECEIVER_PROFILES.ghana;
+const receiverSelector='<div class="user-selector">'+Object.entries(RECEIVER_PROFILES).map(([k,rec])=>'<div class="user-pill'+(k===activeReceiverId?' active':'')+'" onclick="switchReceiver(\''+k+'\')"><span class="avatar">'+rec.avatar+'</span><span>'+rec.name+'</span><span style="font-size:9px;color:var(--text2)"> ('+rec.country+')</span></div>').join('')+'</div>';
+
+return receiverSelector+'<div class="card'+hl+'"><div class="card-header"><div class="card-title">📥 Incoming Funds</div></div>'+(showIncoming?'<div class="glass-card" style="text-align:center;padding:24px"><div style="font-size:48px;margin-bottom:16px">'+(status==='completed'?'✅':'⏳')+'</div><div style="font-size:28px;font-weight:700;margin-bottom:8px">'+fmt((DEMO_TX.amount||500)*getRate(DEMO_TX.fromCur||'AED',DEMO_TX.toCur||'GHS'),0)+' '+(DEMO_TX.toCur||'GHS')+'</div><div style="color:var(--text2);margin-bottom:16px">From: '+getActiveSender().name+'</div>'+(status==='completed'?'<div class="badge badge-success" style="font-size:14px;padding:8px 16px">✓ Funds Received at '+DEMO_TX.completedTime?.toLocaleTimeString()+'</div>':status==='payout_processing'?'<div style="color:var(--yellow)">⏳ Your payout is being processed by '+receiverProfile.method+'...</div>':'<div style="color:var(--accent)">💰 Payment confirmed, awaiting payout...</div>')+'<div class="timeline" style="text-align:left;margin-top:24px"><div class="timeline-item"><div class="timeline-dot complete">✓</div><div class="timeline-content"><div class="timeline-title">Payment Initiated</div></div></div><div class="timeline-item"><div class="timeline-dot '+(status!=='lp_funded'?'complete':'active')+'">✓</div><div class="timeline-content"><div class="timeline-title">Payout Processing</div></div></div><div class="timeline-item"><div class="timeline-dot '+(status==='completed'?'complete':'pending')+'">'+(status==='completed'?'✓':'3')+'</div><div class="timeline-content"><div class="timeline-title">Funds Available</div></div></div></div></div>':'<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">No incoming transfers</div><div class="empty-text">You\'ll be notified when someone sends you money</div></div>')+'</div><div class="card"><div class="card-header"><div class="card-title">💳 Account Balance</div></div><div class="glass-card" style="padding:20px;text-align:center"><div style="font-size:32px;font-weight:700;color:var(--green);margin-bottom:8px">'+CURRENCIES[receiverProfile.currency].symbol+fmt(receiverProfile.balance,0)+'</div><div style="font-size:12px;color:var(--text2)">'+receiverProfile.method+' • '+receiverProfile.country+'</div></div></div>';
+}
+
+function renderReceiverHistory(){
+const hist=txHistory.filter(t=>t.status==='completed'&&!t.pattern).slice(0,5);
+if(!hist.length)return'<div class="card"><div class="card-header"><div class="card-title">📜 Received History</div></div><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No history yet</div></div></div>';
+return'<div class="card"><div class="card-header"><div class="card-title">📜 Received History</div><button class="btn btn-sm btn-secondary" onclick="showToast(\'History exported\',\'success\')">📊 Export</button></div>'+hist.map(tx=>'<div class="tx-row" onclick="showTxDetailModal({id:\''+tx.id+'\',amount:'+tx.amount+',fromCur:\''+tx.fromCur+'\',toCur:\''+(tx.toCur||'NGN')+'\',status:\'completed\'})"><div class="tx-icon" style="background:rgba(63,185,80,0.1)">💰</div><div class="tx-info"><div class="tx-title">'+tx.id+' <span class="badge badge-success">received</span></div><div class="tx-detail">From: '+getActiveSender().name+' • '+tx.completedTime?.toLocaleString()+'</div></div><div class="tx-amount"><div class="tx-value" style="color:var(--green)">+'+fmt(tx.amount*getRate(tx.fromCur,tx.toCur),0)+' '+tx.toCur+'</div></div></div>').join('')+'</div>';
+}
+
+// ============ ADMIN VIEWS ============
+function renderAdminDash(){
+const hl=guidedMode&&guidedStep===5&&!freeMode?' guided-highlight':'';
+// FIX 4: Add Scheduled Transactions section
+const scheduledTxs=[DEMO_TX,...txHistory].filter(t=>t&&t.scheduled&&t.status==='pending');
+const scheduledSection=scheduledTxs.length?'<div class="card"><div class="card-header"><div class="card-title">⏰ Scheduled Transactions</div><span class="badge badge-scheduled">'+scheduledTxs.length+' scheduled</span></div>'+scheduledTxs.slice(0,3).map(tx=>'<div class="tx-row" onclick="showTxDetailModal({id:\''+tx.id+'\',amount:'+tx.amount+',fromCur:\''+tx.fromCur+'\',toCur:\''+(tx.toCur||'NGN')+'\',status:\''+tx.status+'\'})"><div class="tx-icon" style="background:rgba(88,166,255,0.1)">⏰</div><div class="tx-info"><div class="tx-title">'+tx.id+' <span class="badge badge-scheduled">Scheduled</span>'+(tx.premium?' <span class="badge badge-premium">Premium</span>':'')+'</div><div class="tx-detail">Execute: '+(tx.scheduledTime?new Date(tx.scheduledTime).toLocaleString():'Soon')+' • '+tx.fromCur+' → '+tx.toCur+'</div></div><div class="tx-amount"><div class="tx-value">'+fmtCur(tx.amount||500,tx.fromCur||'AED')+'</div></div></div>').join('')+'</div>':'';
+return'<div class="grid-4"><div class="stat-card green"><div class="stat-icon">💰</div><div class="stat-value">$'+fmt(BUSINESS_METRICS.totalVolume,0)+'</div><div class="stat-label">Total Volume</div><div class="stat-change up">+18%</div></div><div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value">'+fmt(BUSINESS_METRICS.txCount,0)+'</div><div class="stat-label">Transactions</div></div><div class="stat-card yellow"><div class="stat-icon">⚡</div><div class="stat-value">$'+fmt(BUSINESS_METRICS.avgTxSize,0)+'</div><div class="stat-label">Avg TX Size</div></div><div class="stat-card purple"><div class="stat-icon">💵</div><div class="stat-value">$'+fmt(BUSINESS_METRICS.revenueTotal,0)+'</div><div class="stat-label">Total Revenue</div></div></div>'+scheduledSection+'<div class="grid-2"><div class="card'+hl+'"><div class="card-header"><div class="card-title">🌍 Top Corridors</div><button class="btn btn-sm btn-secondary" onclick="setView(\'corridors\')">View All</button></div>'+TOP_CORRIDORS.slice(0,4).map((c,i)=>'<div class="tx-row" onclick="showCorridorDetailModal('+i+')"><div class="tx-icon" style="background:rgba(88,166,255,0.1)">'+CURRENCIES[c.from].flag+'</div><div class="tx-info"><div class="tx-title">'+c.name+'</div><div class="tx-detail">'+c.from+' → '+c.to+'</div></div><div class="tx-amount"><div class="tx-value">'+c.vol+'</div><div class="tx-status" style="color:var(--green)">'+fmt(getRate(c.from,c.to),2)+'</div></div></div>').join('')+'</div><div class="card"><div class="card-header"><div class="card-title">📈 Revenue Breakdown</div></div><div class="revenue-breakdown"><div class="revenue-row"><span class="label">FX Spread</span><span class="value">$'+fmt(BUSINESS_METRICS.revenueFX,0)+'</span></div><div class="revenue-row"><span class="label">Premium Fees</span><span class="value">$'+fmt(BUSINESS_METRICS.revenuePremium,0)+'</span></div><div class="revenue-row"><span class="label">LP Revenue Share</span><span class="value">$'+fmt(BUSINESS_METRICS.revenueLP,0)+'</span></div><div class="revenue-row"><span class="label">Anchor Revenue Share</span><span class="value">$'+fmt(BUSINESS_METRICS.revenueAnchor,0)+'</span></div></div><div class="investor-highlight"><div class="title">💡 Unit Economics</div><div class="value">1.5% take rate</div><div class="sub">$23 revenue per transaction avg • 67% gross margin</div></div></div></div>'+(DEMO_TX&&!DEMO_TX.scheduled?'<div class="card"><div class="card-header"><div class="card-title">🔴 Live Transaction</div><span class="badge badge-new">'+DEMO_TX.status.replace(/_/g,' ')+'</span><button class="btn btn-sm btn-secondary" onclick="showSettlementTraceModal()">🔍 Trace</button></div><div class="tx-row highlight" onclick="showTxDetailModal(DEMO_TX)"><div class="tx-icon" style="background:rgba(163,113,247,0.1)">'+(CURRENCIES[DEMO_TX.toCur]?.flag||'💸')+'</div><div class="tx-info"><div class="tx-title">'+DEMO_TX.id+' <span class="badge badge-info">'+DEMO_TX.status.replace(/_/g,' ')+'</span>'+(DEMO_TX.premium?' <span class="badge badge-premium">Premium</span>':'')+'</div><div class="tx-detail">'+(DEMO_TX.fromCur||'AED')+' → '+(DEMO_TX.toCur||'NGN')+' • '+getActiveSender().name+' → '+(DEMO_TX.recipient?.name||'Recipient')+'</div></div><div class="tx-amount"><div class="tx-value">'+fmtCur(DEMO_TX.amount||500,DEMO_TX.fromCur||'AED')+'</div><div class="tx-status">→ '+fmt((DEMO_TX.amount||500)*getRate(DEMO_TX.fromCur||'AED',DEMO_TX.toCur||'NGN'),0)+' '+(DEMO_TX.toCur||'NGN')+'</div></div></div></div>':'');
+}
+
+function renderAdminTx(){
+const flagged=txHistory.filter(t=>t.pattern==='bilateral');
+const all=DEMO_TX?[DEMO_TX,...txHistory]:txHistory;
+return'<div class="card"><div class="card-header"><div class="card-title">📋 All Transactions</div><span class="badge badge-info">'+(all.length||0)+' total</span>'+(flagged.length?'<span class="badge badge-danger" style="margin-left:8px">'+flagged.length+' flagged</span>':'')+'<button class="btn btn-sm btn-secondary" onclick="showToast(\'Transactions exported\',\'success\')">📊 Export</button></div>'+(all.length?all.map(tx=>'<div class="tx-row'+(tx.pattern==='bilateral'?' suspicious':'')+'" onclick="'+(tx.pattern==='bilateral'?'showFraudReviewModal({id:\''+tx.id+'\'})':'showTxDetailModal({id:\''+tx.id+'\',amount:'+(tx.amount||500)+',fromCur:\''+(tx.fromCur||'AED')+'\',toCur:\''+(tx.toCur||'NGN')+'\',status:\''+(tx.status||'pending')+'\'})') +'"><div class="tx-icon" style="background:'+(tx.pattern==='bilateral'?'rgba(248,81,73,0.1)':'rgba(88,166,255,0.1)')+'">'+(tx.pattern==='bilateral'?'⚠️':(CURRENCIES[tx.toCur]?.flag||'💸'))+'</div><div class="tx-info"><div class="tx-title">'+tx.id+' <span class="badge badge-'+(tx.status==='completed'?'success':tx.status==='flagged'?'danger':'info')+'">'+(tx.status||'pending')+'</span>'+(tx.premium?' <span class="badge badge-premium">Premium</span>':'')+(tx.scheduled?' <span class="badge badge-scheduled">Scheduled</span>':'')+(tx.pattern==='bilateral'?' <span class="badge badge-collusion">Pattern Detected</span>':'')+'</div><div class="tx-detail">'+(tx.fromCur||tx.corridor||'AED→NGN')+' • '+(tx.timestamp?.toLocaleString()||'Just now')+'</div></div><div class="tx-amount"><div class="tx-value">'+fmtCur(tx.amount||500,tx.fromCur||tx.cur||'AED')+'</div>'+(tx.pattern==='bilateral'?'<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();showFraudReviewModal({id:\''+tx.id+'\'})">Review</button>':'')+'</div></div>').join(''):'<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No transactions yet</div></div>')+'</div>';
+}
+
+function renderAdminRevenue(){
+return'<div class="grid-4"><div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value">$'+fmt(BUSINESS_METRICS.revenueTotal,0)+'</div><div class="stat-label">Total Revenue</div></div><div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value">$'+fmt(BUSINESS_METRICS.revenueFX,0)+'</div><div class="stat-label">FX Revenue</div></div><div class="stat-card yellow"><div class="stat-icon">⭐</div><div class="stat-value">$'+fmt(BUSINESS_METRICS.revenuePremium,0)+'</div><div class="stat-label">Premium Fees</div></div><div class="stat-card purple"><div class="stat-icon">🤝</div><div class="stat-value">$'+fmt(BUSINESS_METRICS.revenueLP+BUSINESS_METRICS.revenueAnchor,0)+'</div><div class="stat-label">Partner Revenue</div></div></div><div class="card"><div class="card-header"><div class="card-title">📈 Revenue Streams</div><button class="btn btn-sm btn-secondary" onclick="showToast(\'Revenue report exported\',\'success\')">📊 Export</button></div><div class="revenue-breakdown" style="font-size:14px"><div class="revenue-row"><span class="label">FX Spread (1.2% avg)</span><span class="value">$'+fmt(BUSINESS_METRICS.revenueFX,0)+'</span></div><div class="revenue-row"><span class="label">Premium Fast-Track ($5/tx)</span><span class="value">$'+fmt(BUSINESS_METRICS.revenuePremium,0)+'</span></div><div class="revenue-row"><span class="label">LP Revenue Share</span><span class="value">$'+fmt(BUSINESS_METRICS.revenueLP,0)+'</span></div><div class="revenue-row"><span class="label">Anchor Revenue Share</span><span class="value">$'+fmt(BUSINESS_METRICS.revenueAnchor,0)+'</span></div></div></div><div class="investor-highlight"><div class="title">💡 Key Metrics</div><div class="value">1.5% blended take rate</div><div class="sub">$2.8M volume → $42K revenue • Path to 3% take rate with premium adoption</div></div>';
+}
+
+function renderAdminCorridors(){
+return'<div class="card"><div class="card-header"><div class="card-title">🌍 Active Corridors</div><span class="badge badge-info">'+TOP_CORRIDORS.length+' corridors</span><button class="btn btn-sm btn-secondary" onclick="showToast(\'Corridor report exported\',\'success\')">📊 Export</button></div><div class="corridor-grid">'+TOP_CORRIDORS.map((c,i)=>'<div class="corridor-card" onclick="showCorridorDetailModal('+i+')"><div class="flags">'+CURRENCIES[c.from].flag+' → '+CURRENCIES[c.to].flag+'</div><div class="route">'+c.name+'</div><div class="volume">Volume: '+c.vol+'</div><div class="rate">Rate: '+fmt(getRate(c.from,c.to),2)+' '+c.to+'</div>'+(c.fraudFlags?'<div style="color:var(--yellow);font-size:10px;margin-top:4px">⚠️ '+c.fraudFlags+' flags</div>':'')+'</div>').join('')+'</div></div>';
+}
+
+function renderAdminFraud(){
+const flagged=txHistory.filter(t=>t.pattern==='bilateral');
+return'<div class="grid-3"><div class="stat-card green"><div class="stat-icon">🛡️</div><div class="stat-value">99.2%</div><div class="stat-label">Clean Transactions</div></div><div class="stat-card yellow"><div class="stat-icon">⚠️</div><div class="stat-value">'+flagged.length+'</div><div class="stat-label">Flagged Patterns</div></div><div class="stat-card"><div class="stat-icon">🔍</div><div class="stat-value">$0</div><div class="stat-label">Fraud Losses</div></div></div><div class="card"><div class="card-header"><div class="card-title">🚨 Fraud Controls</div><button class="btn btn-sm btn-danger" onclick="simulateCollusionPattern()">Simulate Collusion</button></div><div class="glass-card" style="margin-bottom:12px"><div style="font-weight:600;margin-bottom:8px">Anti-Gaming Measures</div><div style="font-size:12px;color:var(--text2)">• Bilateral volume concentration monitoring<br>• FlowScore penalties for suspicious patterns<br>• Counterparty diversity requirements<br>• Real-time pattern detection</div></div>'+(flagged.length?'<div style="font-weight:600;margin-bottom:12px">Flagged Transactions</div>'+flagged.map(tx=>'<div class="tx-row suspicious" onclick="showFraudReviewModal({id:\''+tx.id+'\'})"><div class="tx-icon" style="background:rgba(248,81,73,0.1)">⚠️</div><div class="tx-info"><div class="tx-title">'+tx.id+' <span class="badge badge-collusion">Pattern Detected</span></div><div class="tx-detail">Concentration: '+(tx.concentration||83)+'% bilateral volume</div></div><div class="tx-amount"><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();showFraudReviewModal({id:\''+tx.id+'\'})">Review</button></div></div>').join(''):'<div style="color:var(--text2);text-align:center;padding:20px">No flagged transactions</div>')+'</div>';
+}
+
+// ============ INITIALIZATION ============
+document.addEventListener('DOMContentLoaded',()=>{
+  render();
+  updateSavingsTicker();
+  updateModeIndicator();
+  pushNotif('Welcome to FlowBridge Investor Demo v4','info');
+  pushNotif('Try switching users or loading a scenario!','info');
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown',(e)=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.key==='r'||e.key==='R'){resetDemo()}
+  if(e.key==='g'||e.key==='G'){toggleGuidedDemo()}
+  if(e.key==='f'||e.key==='F'){toggleMode()}
+  if(e.key==='1'){switchRole('sender')}
+  if(e.key==='2'){switchRole('lp')}
+  if(e.key==='3'){switchRole('anchor')}
+  if(e.key==='4'){switchRole('receiver')}
+  if(e.key==='5'){switchRole('admin')}
+});
+</script>
+</body>
+</html>
