@@ -991,6 +991,12 @@ function updateSendAmount(val){
   else DEMO_TX.amount=parseInt(val);
   render();
 }
+function updateFromCurrency(cur){
+  const u=getActiveSender();
+  if(!DEMO_TX)DEMO_TX={amount:500,fromCur:cur,toCur:'NGN',status:'pending'};
+  else DEMO_TX.fromCur=cur;
+  render();
+}
 function updateToCurrency(cur){
   const u=getActiveSender();
   if(!DEMO_TX)DEMO_TX={amount:500,fromCur:u.baseCur||'AED',toCur:cur,status:'pending'};
@@ -1405,15 +1411,19 @@ return'<div class="card"><div class="card-header"><div class="card-title">📍 T
 }
 
 function renderSendMoney(){
-const u=getActiveSender(),lim=getLimit(u.tier),fromCur=u.baseCur||'AED';
+const u=getActiveSender(),lim=getLimit(u.tier);
+const fromCur=DEMO_TX?.fromCur||u.baseCur||'AED';
 const toCur=DEMO_TX?.toCur||'NGN',amt=DEMO_TX?.amount||500;
 const rate=getRate(fromCur,toCur),recv=amt*rate,tradRate=getTradRate(fromCur,toCur),savings=calculateSavings(amt,fromCur,toCur);
 const hl=guidedMode&&guidedStep===0&&!freeMode?' guided-highlight':'';
 
-// Limit validation
-const overLimit=amt>lim.perTx;
-const overDaily=amt+u.dailyUsed>lim.daily;
-const limitMsg=overLimit?'<div class="form-error">⚠️ Exceeds per-transaction limit ('+fmtCur(lim.perTx,'USD')+') <a onclick="showLimitInfoModal()">Why?</a></div>':overDaily?'<div class="form-error">⚠️ Would exceed daily limit ('+fmtCur(lim.daily,'USD')+') <a onclick="showLimitInfoModal()">Why?</a></div>':'';
+// FX-based limit validation
+const amtUSD=fromCur==='USD'?amt:amt*getRate(fromCur,'USD');
+const dailyUsedUSD=u.dailyUsed*(u.baseCur==='USD'?1:getRate(u.baseCur,'USD'));
+
+const overLimit=amtUSD>lim.perTx;
+const overDaily=(amtUSD+dailyUsedUSD)>lim.daily;
+const limitMsg=overLimit?'<div class="form-error" id="limitWarning">⚠️ Exceeds per-transaction limit of '+fmtCur(lim.perTx,'USD')+' (sending '+fmtCur(amt,fromCur)+' ≈ $'+fmt(amtUSD,2)+') <a onclick="showLimitInfoModal()">Why?</a></div>':overDaily?'<div class="form-error" id="limitWarning">⚠️ Would exceed daily limit of '+fmtCur(lim.daily,'USD')+' (total: $'+fmt(amtUSD+dailyUsedUSD,2)+') <a onclick="showLimitInfoModal()">Why?</a></div>':'';
 const trustMsg=u.score>=75&&!overLimit&&!overDaily?'<div class="form-hint">✓ Trusted user: higher limits unlocked</div>':u.score<50?'<div class="form-error">Your current risk tier limits you to '+fmtCur(lim.perTx,'USD')+' per transaction <a onclick="showLimitInfoModal()">Why?</a></div>':'';
 
 // FIX 1: Add datetime-local input for scheduling
