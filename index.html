@@ -525,15 +525,59 @@ const TRAD_RATES={USD:{NGN:1520,INR:81.5,PHP:54.8,GHS:14.8,MXN:16.8,ZWL:340},AED
 
 const COMPETITORS={western_union:{name:'Western Union',markup:0.045,fee:8},moneygram:{name:'MoneyGram',markup:0.038,fee:6},wise:{name:'Wise',markup:0.012,fee:3},bank:{name:'Bank Wire',markup:0.055,fee:25}};
 
+// ============ CORRIDOR PRICING ENGINE ============
+const corridorPricing = {
+  1: { lp: 0.50, anchor: 0.50, fb: 0.25 },
+  2: { lp: 1.00, anchor: 1.00, fb: 0.50 },
+  3: { lp: 1.50, anchor: 1.50, fb: 0.75 },
+  4: { lp: 2.50, anchor: 2.50, fb: 1.00 }
+};
+
+// Default pricing for backwards compatibility
+let defaultCorridorPricing = JSON.parse(JSON.stringify(corridorPricing));
+
+function calculatePricing(tier, txAmountUSD) {
+  const p = corridorPricing[tier];
+  if (!p) return { lpFee: 0, anchorFee: 0, fbMargin: 0, totalFee: 0, effCostPct: 0 };
+  const totalFee = p.lp + p.anchor + p.fb;
+  return {
+    lpFee: p.lp,
+    anchorFee: p.anchor,
+    fbMargin: p.fb,
+    totalFee,
+    effCostPct: txAmountUSD ? (totalFee / txAmountUSD * 100) : 0
+  };
+}
+
+function simulateDynamicPricing(base, LPI, VIXc, RPS) {
+  // base = { lp, anchor, fb }
+  // LPI = Liquidity Pressure Index (0-1): higher = less liquidity available
+  // VIXc = Volatility Index for corridor (0-0.3): currency volatility
+  // RPS = Risk Profile Score (0-1): higher = more risk
+  
+  const liquidityMultiplier = 1 + (LPI * 0.5); // Up to 50% increase
+  const volatilityMultiplier = 1 + (VIXc * 2); // Up to 60% increase
+  const riskMultiplier = 1 + (RPS * 0.3); // Up to 30% increase
+  
+  const combinedMultiplier = liquidityMultiplier * volatilityMultiplier * riskMultiplier;
+  
+  return {
+    lp: base.lp * combinedMultiplier,
+    anchor: base.anchor * combinedMultiplier,
+    fb: base.fb * combinedMultiplier,
+    multiplier: combinedMultiplier
+  };
+}
+
 const TOP_CORRIDORS=[
-{from:'AED',to:'NGN',vol:'$2.4M',name:'UAE → Nigeria',txCount:847,avgSize:2834,revenue:36000,fraudFlags:2,fromCountry:'UAE',toCountry:'Nigeria',isLive:true,lpIds:['kwame'],anchorIds:['mtn'],requiresHop:false},
-{from:'USD',to:'INR',vol:'$4.1M',name:'US → India',txCount:1234,avgSize:3324,revenue:61500,fraudFlags:0,fromCountry:'USA',toCountry:'India',isLive:true,lpIds:['raj'],anchorIds:['upi'],requiresHop:false},
-{from:'GBP',to:'INR',vol:'$1.8M',name:'UK → India',txCount:542,avgSize:3321,revenue:27000,fraudFlags:1,fromCountry:'UK',toCountry:'India',isLive:true,lpIds:['raj'],anchorIds:['upi'],requiresHop:false},
-{from:'AED',to:'PHP',vol:'$1.6M',name:'UAE → Philippines',txCount:623,avgSize:2568,revenue:24000,fraudFlags:0,fromCountry:'UAE',toCountry:'Philippines',isLive:true,lpIds:['kwame','chen'],anchorIds:['gcash'],requiresHop:true,hopPath:['kwame','chen']},
-{from:'USD',to:'MXN',vol:'$3.2M',name:'US → Mexico',txCount:1156,avgSize:2768,revenue:48000,fraudFlags:3,fromCountry:'USA',toCountry:'Mexico',isLive:true,lpIds:['jose'],anchorIds:['jose'],requiresHop:false},
-{from:'AED',to:'GHS',vol:'$890K',name:'UAE → Ghana',txCount:312,avgSize:2853,revenue:13350,fraudFlags:0,fromCountry:'UAE',toCountry:'Ghana',isLive:true,lpIds:['kwame'],anchorIds:['kwame'],requiresHop:false},
-{from:'GBP',to:'ZWL',vol:'$520K',name:'UK → Zimbabwe',txCount:187,avgSize:2781,revenue:7800,fraudFlags:0,fromCountry:'UK',toCountry:'Zimbabwe',isLive:true,lpIds:['kwame'],anchorIds:['ecocash'],requiresHop:false},
-{from:'AED',to:'KES',vol:'$1.1M',name:'UAE → Kenya',txCount:398,avgSize:2764,revenue:16500,fraudFlags:1,fromCountry:'UAE',toCountry:'Kenya',isLive:true,lpIds:['kwame'],anchorIds:['mpesa'],requiresHop:false}
+{from:'AED',to:'NGN',vol:'$2.4M',name:'UAE → Nigeria',txCount:847,avgSize:2834,revenue:36000,fraudFlags:2,fromCountry:'UAE',toCountry:'Nigeria',isLive:true,lpIds:['kwame'],anchorIds:['mtn'],requiresHop:false,tier:2},
+{from:'USD',to:'INR',vol:'$4.1M',name:'US → India',txCount:1234,avgSize:3324,revenue:61500,fraudFlags:0,fromCountry:'USA',toCountry:'India',isLive:true,lpIds:['raj'],anchorIds:['upi'],requiresHop:false,tier:1},
+{from:'GBP',to:'INR',vol:'$1.8M',name:'UK → India',txCount:542,avgSize:3321,revenue:27000,fraudFlags:1,fromCountry:'UK',toCountry:'India',isLive:true,lpIds:['raj'],anchorIds:['upi'],requiresHop:false,tier:1},
+{from:'AED',to:'PHP',vol:'$1.6M',name:'UAE → Philippines',txCount:623,avgSize:2568,revenue:24000,fraudFlags:0,fromCountry:'UAE',toCountry:'Philippines',isLive:true,lpIds:['kwame','chen'],anchorIds:['gcash'],requiresHop:true,hopPath:['kwame','chen'],tier:3},
+{from:'USD',to:'MXN',vol:'$3.2M',name:'US → Mexico',txCount:1156,avgSize:2768,revenue:48000,fraudFlags:3,fromCountry:'USA',toCountry:'Mexico',isLive:true,lpIds:['jose'],anchorIds:['jose'],requiresHop:false,tier:2},
+{from:'AED',to:'GHS',vol:'$890K',name:'UAE → Ghana',txCount:312,avgSize:2853,revenue:13350,fraudFlags:0,fromCountry:'UAE',toCountry:'Ghana',isLive:true,lpIds:['kwame'],anchorIds:['kwame'],requiresHop:false,tier:1},
+{from:'GBP',to:'ZWL',vol:'$520K',name:'UK → Zimbabwe',txCount:187,avgSize:2781,revenue:7800,fraudFlags:0,fromCountry:'UK',toCountry:'Zimbabwe',isLive:true,lpIds:['kwame'],anchorIds:['ecocash'],requiresHop:false,tier:4},
+{from:'AED',to:'KES',vol:'$1.1M',name:'UAE → Kenya',txCount:398,avgSize:2764,revenue:16500,fraudFlags:1,fromCountry:'UAE',toCountry:'Kenya',isLive:true,lpIds:['kwame'],anchorIds:['mpesa'],requiresHop:false,tier:2}
 ];
 
 const TIER_LIMITS={bronze:{daily:500,monthly:2000,perTx:300,label:'Bronze'},silver:{daily:2000,monthly:10000,perTx:1500,label:'Silver'},gold:{daily:5000,monthly:25000,perTx:4000,label:'Gold'},platinum:{daily:15000,monthly:100000,perTx:10000,label:'Platinum'}};
@@ -1326,7 +1370,7 @@ else if(currentRole==='lp'){
   // BUG FIX 2: Use active LP profile instead of hardcoded
   const lpProfile=LP_PROFILES[activeLPId]||LP_PROFILES.kwame;
   user={name:lpProfile.name,avatar:lpProfile.avatar,tier:'provider',color:'#3fb950',premium:false};
-  nav='<div class="nav-section">Operations</div><button class="nav-btn'+(currentView==='dashboard'?' active':'')+'" onclick="setView(\'dashboard\')"><span class="nav-btn-icon">📊</span>Dashboard</button><button class="nav-btn'+(currentView==='orders'?' active':'')+'" onclick="setView(\'orders\')"><span class="nav-btn-icon">📋</span>Order Book'+(DEMO_TX&&DEMO_TX.status==='matched'?'<span class="nav-btn-badge">1</span>':'')+'</button><button class="nav-btn'+(currentView==='positions'?' active':'')+'" onclick="setView(\'positions\')"><span class="nav-btn-icon">💰</span>Positions</button><button class="nav-btn'+(currentView==='profile'?' active':'')+'" onclick="setView(\'profile\')"><span class="nav-btn-icon">🏢</span>Profile</button>';
+  nav='<div class="nav-section">Operations</div><button class="nav-btn'+(currentView==='dashboard'?' active':'')+'" onclick="setView(\'dashboard\')"><span class="nav-btn-icon">📊</span>Dashboard</button><button class="nav-btn'+(currentView==='orders'?' active':'')+'" onclick="setView(\'orders\')"><span class="nav-btn-icon">📋</span>Order Book'+(DEMO_TX&&DEMO_TX.status==='matched'?'<span class="nav-btn-badge">1</span>':'')+'</button><button class="nav-btn'+(currentView==='positions'?' active':'')+'" onclick="setView(\'positions\')"><span class="nav-btn-icon">💰</span>Positions</button><button class="nav-btn'+(currentView==='pricing'?' active':'')+'" onclick="setView(\'pricing\')"><span class="nav-btn-icon">💲</span>Corridor Pricing</button><button class="nav-btn'+(currentView==='profile'?' active':'')+'" onclick="setView(\'profile\')"><span class="nav-btn-icon">🏢</span>Profile</button>';
 }
 else if(currentRole==='anchor'){
   // BUG FIX 2: Use active Anchor profile instead of hardcoded
@@ -1342,7 +1386,7 @@ else if(currentRole==='receiver'){
 }
 else if(currentRole==='admin'){
   user={name:'Admin Panel',avatar:'⚙️',tier:'admin',color:'#f85149',premium:false};
-  nav='<div class="nav-section">Platform</div><button class="nav-btn'+(currentView==='dashboard'?' active':'')+'" onclick="setView(\'dashboard\')"><span class="nav-btn-icon">📊</span>Overview</button><button class="nav-btn'+(currentView==='transactions'?' active':'')+'" onclick="setView(\'transactions\')"><span class="nav-btn-icon">📋</span>Transactions</button><button class="nav-btn'+(currentView==='revenue'?' active':'')+'" onclick="setView(\'revenue\')"><span class="nav-btn-icon">💰</span>Revenue</button><button class="nav-btn'+(currentView==='corridors'?' active':'')+'" onclick="setView(\'corridors\')"><span class="nav-btn-icon">🌍</span>Corridors</button><button class="nav-btn'+(currentView==='fraud'?' active':'')+'" onclick="setView(\'fraud\')"><span class="nav-btn-icon">🛡️</span>Fraud</button>';
+  nav='<div class="nav-section">Platform</div><button class="nav-btn'+(currentView==='dashboard'?' active':'')+'" onclick="setView(\'dashboard\')"><span class="nav-btn-icon">📊</span>Overview</button><button class="nav-btn'+(currentView==='transactions'?' active':'')+'" onclick="setView(\'transactions\')"><span class="nav-btn-icon">📋</span>Transactions</button><button class="nav-btn'+(currentView==='revenue'?' active':'')+'" onclick="setView(\'revenue\')"><span class="nav-btn-icon">💰</span>Revenue</button><button class="nav-btn'+(currentView==='corridors'?' active':'')+'" onclick="setView(\'corridors\')"><span class="nav-btn-icon">🌍</span>Corridors</button><button class="nav-btn'+(currentView==='pricing'?' active':'')+'" onclick="setView(\'pricing\')"><span class="nav-btn-icon">💲</span>Pricing Controls</button><button class="nav-btn'+(currentView==='fraud'?' active':'')+'" onclick="setView(\'fraud\')"><span class="nav-btn-icon">🛡️</span>Fraud</button>';
 }
 
 const tierBadge=user.tier==='provider'?'badge-success':user.tier==='anchor'?'badge-warning':user.tier==='admin'?'badge-danger':user.tier==='recipient'?'badge-info':'badge-'+user.tier;
@@ -1365,6 +1409,7 @@ else if(currentRole==='lp'){
   if(currentView==='dashboard')c.innerHTML=renderLPDash();
   else if(currentView==='orders')c.innerHTML=renderLPOrders();
   else if(currentView==='positions')c.innerHTML=renderLPPositions();
+  else if(currentView==='pricing')c.innerHTML=renderLPPricing();
   else if(currentView==='profile')c.innerHTML=renderLPProfile();
   else c.innerHTML=renderLPDash();
 }
@@ -1372,6 +1417,7 @@ else if(currentRole==='anchor'){
   if(currentView==='dashboard')c.innerHTML=renderAnchorDash();
   else if(currentView==='payouts')c.innerHTML=renderAnchorPayouts();
   else if(currentView==='history')c.innerHTML=renderAnchorHistory();
+  else if(currentView==='pricing')c.innerHTML=renderAnchorPricing();
   else if(currentView==='profile')c.innerHTML=renderAnchorProfile();
   else c.innerHTML=renderAnchorDash();
 }
@@ -1386,6 +1432,7 @@ else if(currentRole==='admin'){
   else if(currentView==='transactions')c.innerHTML=renderAdminTx();
   else if(currentView==='revenue')c.innerHTML=renderAdminRevenue();
   else if(currentView==='corridors')c.innerHTML=renderAdminCorridors();
+  else if(currentView==='pricing')c.innerHTML=renderAdminPricing();
   else if(currentView==='fraud')c.innerHTML=renderAdminFraud();
   else c.innerHTML=renderAdminDash();
 }
@@ -1417,6 +1464,13 @@ const toCur=DEMO_TX?.toCur||'NGN',amt=DEMO_TX?.amount||500;
 const rate=getRate(fromCur,toCur),recv=amt*rate,tradRate=getTradRate(fromCur,toCur),savings=calculateSavings(amt,fromCur,toCur);
 const hl=guidedMode&&guidedStep===0&&!freeMode?' guided-highlight':'';
 
+// Calculate pricing breakdown for selected corridor
+const corridor=TOP_CORRIDORS.find(c=>c.from===fromCur&&c.to===toCur);
+const tier=corridor?.tier||2;
+const amtUSDforPricing=fromCur==='USD'?amt:amt*getRate(fromCur,'USD');
+const pricing=calculatePricing(tier,amtUSDforPricing);
+const pricingBreakdown='<div class="glass-card" style="margin-top:12px;padding:12px"><div style="font-weight:600;margin-bottom:8px;font-size:12px">💰 Pricing Breakdown (Tier '+tier+')</div><div class="revenue-breakdown"><div class="revenue-row"><span class="label">LP Fee</span><span class="value">$'+fmt(pricing.lpFee,2)+'</span></div><div class="revenue-row"><span class="label">Anchor Fee</span><span class="value">$'+fmt(pricing.anchorFee,2)+'</span></div><div class="revenue-row"><span class="label">FlowBridge Margin</span><span class="value">$'+fmt(pricing.fbMargin,2)+'</span></div><div class="revenue-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px"><span class="label" style="font-weight:600">Total Fee</span><span class="value" style="font-weight:700">$'+fmt(pricing.totalFee,2)+'</span></div><div class="revenue-row"><span class="label">Effective Cost</span><span class="value">'+fmt(pricing.effCostPct,3)+'%</span></div></div><div style="font-size:10px;color:var(--green);margin-top:8px">✓ Still 5-10x cheaper than Western Union</div></div>';
+
 // FX-based limit validation
 const amtUSD=fromCur==='USD'?amt:amt*getRate(fromCur,'USD');
 const dailyUsedUSD=u.dailyUsed*(u.baseCur==='USD'?1:getRate(u.baseCur,'USD'));
@@ -1435,7 +1489,7 @@ const inviteBtn='<button class="btn btn-sm btn-secondary" onclick="showInviteRec
 // FIX 5: Add peer-LP toggle
 const peerLPSection='<div class="glass-card" style="margin-top:12px;padding:12px"><div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-weight:600;font-size:12px">Peer Liquidity Provider</div><div style="font-size:10px;color:var(--text2)">Provide liquidity in your corridors</div></div><label style="cursor:pointer"><input type="checkbox" '+(u.canProvideLiquidity?'checked':'')+' onchange="toggleUserAsLP()" style="width:auto;cursor:pointer"></label></div>'+(u.canProvideLiquidity?'<div style="font-size:10px;color:var(--green);margin-top:6px">✓ Active in: '+(u.lpCorridors||[]).join(', ')+'</div>':'')+'</div>';
 
-return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">💸 Send Money</div><span style="font-size:11px;color:var(--text2)">Sending as '+u.name+'</span></div><div class="send-form"><div class="form-group"><label class="form-label">You Send</label><div class="amount-display"><span class="amount-value">'+fmt(amt,0)+'</span><span class="amount-currency">'+fromCur+'</span></div><input type="range" min="100" max="'+lim.perTx+'" step="50" value="'+amt+'" style="width:100%" onchange="updateSendAmount(this.value)">'+limitMsg+trustMsg+'</div><div class="form-group"><label class="form-label">To Country</label><select class="form-select" onchange="updateToCurrency(this.value)"><option value="NGN"'+(toCur==='NGN'?' selected':'')+'>🇳🇬 Nigeria (NGN)</option><option value="GHS"'+(toCur==='GHS'?' selected':'')+'>🇬🇭 Ghana (GHS)</option><option value="INR"'+(toCur==='INR'?' selected':'')+'>🇮🇳 India (INR)</option><option value="PHP"'+(toCur==='PHP'?' selected':'')+'>🇵🇭 Philippines (PHP)</option><option value="KES"'+(toCur==='KES'?' selected':'')+'>🇰🇪 Kenya (KES)</option><option value="ZWL"'+(toCur==='ZWL'?' selected':'')+'>🇿🇼 Zimbabwe (ZWL)</option><option value="MXN"'+(toCur==='MXN'?' selected':'')+'>🇲🇽 Mexico (MXN)</option></select></div><div class="rate-info"><span>Exchange Rate</span><span class="rate-value">1 '+fromCur+' = '+fmt(rate,2)+' '+toCur+'</span></div><div class="receive-amount"><span class="receive-flag">'+(CURRENCIES[toCur]?.flag||'🌍')+'</span><div><div class="receive-value">'+fmt(recv,2)+'</div><div class="receive-currency">'+toCur+' received</div></div></div><div class="competitor-compare"><div class="title">Rate Comparison</div><div class="competitor-row best"><span class="name">⚡ FlowBridge</span><span class="rate">'+fmt(rate,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Wise</span><span class="rate">'+fmt(rate*0.988,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Western Union</span><span class="rate">'+fmt(rate*0.955,2)+' '+toCur+'</span></div><div class="competitor-row worst"><span class="name">Bank Wire</span><span class="rate">'+fmt(tradRate,2)+' '+toCur+'</span></div></div><div class="speed-compare"><div class="speed-item highlight"><div class="label">FlowBridge</div><div class="time">< 5 min</div></div><div class="speed-item"><div class="label">Traditional</div><div class="time">2-3 days</div></div></div>'+(savings>0?'<div class="savings-highlight"><div class="amount">+'+fmtCur(savings,toCur)+'</div><div class="label">You save vs bank wire</div></div>':'')+'<div class="form-group" style="margin-top:16px"><label class="form-label">Recipient</label>'+RECIPIENTS.slice(0,4).map(r=>'<div class="recipient-card'+(DEMO_TX?.recipient?.id===r.id?' selected':'')+'" onclick="selectRecipient(\''+r.id+'\')"><div class="recipient-avatar" style="background:var(--bg4)">'+r.flag+'</div><div class="recipient-info"><div class="recipient-name">'+r.name+(r.pending?' <span class="badge badge-warning" style="font-size:9px">Pending</span>':'')+'</div><div class="recipient-detail">'+r.method+' • '+r.account+'</div></div></div>').join('')+inviteBtn+'</div><div class="form-group"><label class="form-label">Schedule</label><div class="grid-2"><label class="schedule-option'+((!DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" checked onclick="setSchedule(false)"><span>🚀 Send Now</span></label><label class="schedule-option'+((DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" onclick="setSchedule(true)"><span>⏰ Schedule</span></label></div></div>'+scheduleInput+peerLPSection+'<button class="btn btn-primary btn-lg" style="width:100%"'+(overLimit||overDaily?' disabled':'')+' onclick="submitSend('+amt+',\''+fromCur+'\',\''+toCur+'\')">Continue to FlowSwipe →</button></div></div>';
+return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">💸 Send Money</div><span style="font-size:11px;color:var(--text2)">Sending as '+u.name+'</span></div><div class="send-form"><div class="form-group"><label class="form-label">You Send</label><div class="amount-display"><span class="amount-value">'+fmt(amt,0)+'</span><span class="amount-currency">'+fromCur+'</span></div><input type="range" min="100" max="'+lim.perTx+'" step="50" value="'+amt+'" style="width:100%" onchange="updateSendAmount(this.value)">'+limitMsg+trustMsg+'</div><div class="form-group"><label class="form-label">To Country</label><select class="form-select" onchange="updateToCurrency(this.value)"><option value="NGN"'+(toCur==='NGN'?' selected':'')+'>🇳🇬 Nigeria (NGN)</option><option value="GHS"'+(toCur==='GHS'?' selected':'')+'>🇬🇭 Ghana (GHS)</option><option value="INR"'+(toCur==='INR'?' selected':'')+'>🇮🇳 India (INR)</option><option value="PHP"'+(toCur==='PHP'?' selected':'')+'>🇵🇭 Philippines (PHP)</option><option value="KES"'+(toCur==='KES'?' selected':'')+'>🇰🇪 Kenya (KES)</option><option value="ZWL"'+(toCur==='ZWL'?' selected':'')+'>🇿🇼 Zimbabwe (ZWL)</option><option value="MXN"'+(toCur==='MXN'?' selected':'')+'>🇲🇽 Mexico (MXN)</option></select></div><div class="rate-info"><span>Exchange Rate</span><span class="rate-value">1 '+fromCur+' = '+fmt(rate,2)+' '+toCur+'</span></div><div class="receive-amount"><span class="receive-flag">'+(CURRENCIES[toCur]?.flag||'🌍')+'</span><div><div class="receive-value">'+fmt(recv,2)+'</div><div class="receive-currency">'+toCur+' received</div></div></div>'+pricingBreakdown+'<div class="competitor-compare"><div class="title">Rate Comparison</div><div class="competitor-row best"><span class="name">⚡ FlowBridge</span><span class="rate">'+fmt(rate,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Wise</span><span class="rate">'+fmt(rate*0.988,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Western Union</span><span class="rate">'+fmt(rate*0.955,2)+' '+toCur+'</span></div><div class="competitor-row worst"><span class="name">Bank Wire</span><span class="rate">'+fmt(tradRate,2)+' '+toCur+'</span></div></div><div class="speed-compare"><div class="speed-item highlight"><div class="label">FlowBridge</div><div class="time">< 5 min</div></div><div class="speed-item"><div class="label">Traditional</div><div class="time">2-3 days</div></div></div>'+(savings>0?'<div class="savings-highlight"><div class="amount">+'+fmtCur(savings,toCur)+'</div><div class="label">You save vs bank wire</div></div>':'')+'<div class="form-group" style="margin-top:16px"><label class="form-label">Recipient</label>'+RECIPIENTS.slice(0,4).map(r=>'<div class="recipient-card'+(DEMO_TX?.recipient?.id===r.id?' selected':'')+'" onclick="selectRecipient(\''+r.id+'\')"><div class="recipient-avatar" style="background:var(--bg4)">'+r.flag+'</div><div class="recipient-info"><div class="recipient-name">'+r.name+(r.pending?' <span class="badge badge-warning" style="font-size:9px">Pending</span>':'')+'</div><div class="recipient-detail">'+r.method+' • '+r.account+'</div></div></div>').join('')+inviteBtn+'</div><div class="form-group"><label class="form-label">Schedule</label><div class="grid-2"><label class="schedule-option'+((!DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" checked onclick="setSchedule(false)"><span>🚀 Send Now</span></label><label class="schedule-option'+((DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" onclick="setSchedule(true)"><span>⏰ Schedule</span></label></div></div>'+scheduleInput+peerLPSection+'<button class="btn btn-primary btn-lg" style="width:100%"'+(overLimit||overDaily?' disabled':'')+' onclick="submitSend('+amt+',\''+fromCur+'\',\''+toCur+'\')">Continue to FlowSwipe →</button></div></div>';
 }
 
 function renderSwipeView(){
@@ -1504,6 +1558,10 @@ function renderLPPositions(){
 return'<div class="card"><div class="card-header"><div class="card-title">💰 Liquidity Positions</div><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="showAddLiquidityModal()">+ Add Liquidity</button><button class="btn btn-sm btn-secondary" onclick="showWithdrawModal()">Withdraw</button><button class="btn btn-sm btn-secondary" onclick="showToast(\'Positions exported\',\'success\')">📊 Export</button></div></div>'+Object.entries(LP_STATE).map(([pair,pos])=>'<div class="position-card" onclick="showToast(\''+pair.replace(/_/g,' → ')+': $'+fmt(pos.available,0)+' available\',\'info\')"><div class="position-header"><span class="position-pair">'+pair.replace(/_/g,' → ')+'</span><span class="position-util">'+fmt(pos.util*100,0)+'% utilized</span></div><div class="position-bar"><div class="position-fill" style="width:'+pos.util*100+'%;background:linear-gradient(90deg,var(--accent),var(--green))"></div></div><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-top:8px"><span>Available: $'+fmt(pos.available,0)+'</span><span>Locked: $'+fmt(pos.locked,0)+'</span><span>Rate: '+fmt(pos.rate,2)+'</span></div></div>').join('')+'</div>';
 }
 
+function renderLPPricing(){
+return'<div class="card"><div class="card-header"><div class="card-title">💲 Corridor Pricing</div><button class="btn btn-sm btn-secondary" onclick="showToast(\'Pricing exported\',\'success\')">📊 Export</button></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:12px;font-size:11px;color:var(--text2)">CORRIDOR</th><th style="text-align:center;padding:12px;font-size:11px;color:var(--text2)">TIER</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">LP FEE</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">ANCHOR FEE</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">FB MARGIN</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">TOTAL</th></tr></thead><tbody>'+TOP_CORRIDORS.map(c=>{const p=corridorPricing[c.tier];return'<tr style="border-bottom:1px solid var(--border)"><td style="padding:12px"><div style="font-weight:600">'+c.from+' → '+c.to+'</div><div style="font-size:11px;color:var(--text2)">'+c.name+'</div></td><td style="text-align:center;padding:12px"><span class="badge badge-'+(c.tier===1?'success':c.tier===2?'info':c.tier===3?'warning':'danger')+'">Tier '+c.tier+'</span></td><td style="text-align:right;padding:12px;color:var(--green)">$'+fmt(p.lp,2)+'</td><td style="text-align:right;padding:12px;color:var(--green)">$'+fmt(p.anchor,2)+'</td><td style="text-align:right;padding:12px;color:var(--accent)">$'+fmt(p.fb,2)+'</td><td style="text-align:right;padding:12px;font-weight:600">$'+fmt(p.lp+p.anchor+p.fb,2)+'</td></tr>'}).join('')+'</tbody></table></div></div><div class="investor-highlight"><div class="title">💡 LP Earning Potential</div><div class="value">$'+fmt(LP_PROFILES[activeLPId].revenue,0)+' earned</div><div class="sub">Earn '+fmt(corridorPricing[2].lp,2)+' per avg transaction • Scale with volume</div></div>';
+}
+
 // ============ ANCHOR VIEWS ============
 function renderAnchorDash(){
 const anchorProfile=ANCHOR_PROFILES[activeAnchorId];
@@ -1522,6 +1580,12 @@ return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">
 function renderAnchorHistory(){
 const history=[{id:'PAY-889',amount:15200,recipient:'Yaw B.',status:'completed',time:'10:45 AM'},{id:'PAY-888',amount:8900,recipient:'Akua M.',status:'completed',time:'10:32 AM'},{id:'PAY-DELAY',amount:22000,recipient:'Manual Review',status:'delayed',time:'09:15 AM'},{id:'PAY-887',amount:11500,recipient:'Kofi D.',status:'completed',time:'09:28 AM'}];
 return'<div class="card"><div class="card-header"><div class="card-title">📜 Payout History</div><span class="badge badge-info">'+history.length+' today</span><button class="btn btn-sm btn-secondary" onclick="showToast(\'History exported\',\'success\')">📊 Export</button></div>'+history.map(h=>'<div class="tx-row'+(h.status==='delayed'?' suspicious':'')+'" onclick="showPayoutDetailModal({id:\''+h.id+'\',amount:'+h.amount+',recipient:\''+h.recipient+'\',status:\''+h.status+'\'})"><div class="tx-icon" style="background:'+(h.status==='completed'?'rgba(63,185,80,0.1)':h.status==='delayed'?'rgba(210,153,34,0.1)':'rgba(88,166,255,0.1)')+'">🇬🇭</div><div class="tx-info"><div class="tx-title">'+h.id+' <span class="badge badge-'+(h.status==='completed'?'success':h.status==='delayed'?'warning':'info')+'">'+h.status+'</span></div><div class="tx-detail">To: '+h.recipient+' • '+h.time+'</div></div><div class="tx-amount"><div class="tx-value">₵'+fmt(h.amount,0)+'</div></div></div>').join('')+'</div>';
+}
+
+function renderAnchorPricing(){
+const anchorProfile=ANCHOR_PROFILES[activeAnchorId];
+const supportedCorridors=TOP_CORRIDORS.filter(c=>anchorProfile.supportedCorridors.includes(c.from+'_'+c.to));
+return'<div class="card"><div class="card-header"><div class="card-title">💲 Corridor Pricing</div><button class="btn btn-sm btn-secondary" onclick="showToast(\'Pricing exported\',\'success\')">📊 Export</button></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:12px;font-size:11px;color:var(--text2)">CORRIDOR</th><th style="text-align:center;padding:12px;font-size:11px;color:var(--text2)">TIER</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">LP FEE</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">ANCHOR FEE</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">FB MARGIN</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">TOTAL</th></tr></thead><tbody>'+supportedCorridors.map(c=>{const p=corridorPricing[c.tier];return'<tr style="border-bottom:1px solid var(--border)"><td style="padding:12px"><div style="font-weight:600">'+c.from+' → '+c.to+'</div><div style="font-size:11px;color:var(--text2)">'+c.name+'</div></td><td style="text-align:center;padding:12px"><span class="badge badge-'+(c.tier===1?'success':c.tier===2?'info':c.tier===3?'warning':'danger')+'">Tier '+c.tier+'</span></td><td style="text-align:right;padding:12px;color:var(--text2)">$'+fmt(p.lp,2)+'</td><td style="text-align:right;padding:12px;color:var(--green)">$'+fmt(p.anchor,2)+'</td><td style="text-align:right;padding:12px;color:var(--accent)">$'+fmt(p.fb,2)+'</td><td style="text-align:right;padding:12px;font-weight:600">$'+fmt(p.lp+p.anchor+p.fb,2)+'</td></tr>'}).join('')+'</tbody></table></div></div><div class="investor-highlight"><div class="title">💡 Anchor Commission Model</div><div class="value">$'+fmt(anchorProfile.commission,0)+' earned</div><div class="sub">Earn $'+fmt(corridorPricing[2].anchor,2)+' per avg payout • High volume, low overhead</div></div>';
 }
 
 // ============ RECEIVER VIEWS ============
@@ -1564,6 +1628,26 @@ return'<div class="grid-4"><div class="stat-card green"><div class="stat-icon">�
 
 function renderAdminCorridors(){
 return'<div class="card"><div class="card-header"><div class="card-title">🌍 Active Corridors</div><span class="badge badge-info">'+TOP_CORRIDORS.length+' corridors</span><button class="btn btn-sm btn-secondary" onclick="showToast(\'Corridor report exported\',\'success\')">📊 Export</button></div><div class="corridor-grid">'+TOP_CORRIDORS.map((c,i)=>'<div class="corridor-card" onclick="showCorridorDetailModal('+i+')"><div class="flags">'+CURRENCIES[c.from].flag+' → '+CURRENCIES[c.to].flag+'</div><div class="route">'+c.name+'</div><div class="volume">Volume: '+c.vol+'</div><div class="rate">Rate: '+fmt(getRate(c.from,c.to),2)+' '+c.to+'</div>'+(c.fraudFlags?'<div style="color:var(--yellow);font-size:10px;margin-top:4px">⚠️ '+c.fraudFlags+' flags</div>':'')+'</div>').join('')+'</div></div>';
+}
+
+function renderAdminPricing(){
+const rows=Object.keys(corridorPricing).map(tier=>{
+const p=corridorPricing[tier];
+const badgeClass=tier==1?'success':tier==2?'info':tier==3?'warning':'danger';
+return'<tr style="border-bottom:1px solid var(--border)"><td style="text-align:center;padding:12px"><span class="badge badge-'+badgeClass+'">Tier '+tier+'</span></td><td style="text-align:right;padding:12px"><input type="number" value="'+p.lp+'" step="0.1" min="0" style="width:80px;padding:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);text-align:right" onchange="corridorPricing['+tier+'].lp=parseFloat(this.value);render()"></td><td style="text-align:right;padding:12px"><input type="number" value="'+p.anchor+'" step="0.1" min="0" style="width:80px;padding:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);text-align:right" onchange="corridorPricing['+tier+'].anchor=parseFloat(this.value);render()"></td><td style="text-align:right;padding:12px"><input type="number" value="'+p.fb+'" step="0.1" min="0" style="width:80px;padding:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);text-align:right" onchange="corridorPricing['+tier+'].fb=parseFloat(this.value);render()"></td><td style="text-align:right;padding:12px;font-weight:600;color:var(--green)">$'+fmt(p.lp+p.anchor+p.fb,2)+'</td></tr>';
+}).join('');
+return'<div class="card"><div class="card-header"><div class="card-title">💲 Pricing Controls</div><button class="btn btn-sm btn-secondary" onclick="Object.keys(corridorPricing).forEach(function(t){corridorPricing[t]=Object.assign({},defaultCorridorPricing[t])});render();showToast(\'Pricing reset to defaults\',\'success\')">Reset to Defaults</button></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:center;padding:12px;font-size:11px;color:var(--text2)">TIER</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">LP FEE ($)</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">ANCHOR FEE ($)</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">FB MARGIN ($)</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">TOTAL ($)</th></tr></thead><tbody>'+rows+'</tbody></table></div></div><div class="card"><div class="card-header"><div class="card-title">🎯 Stress Test Simulator</div></div><div class="glass-card" style="margin-bottom:16px"><div style="font-weight:600;margin-bottom:12px">Dynamic Pricing Parameters</div><div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px">Liquidity Pressure Index (LPI)</span><span style="font-size:12px;color:var(--accent)" id="lpiValue">0.3</span></div><input type="range" min="0" max="1" step="0.05" value="0.3" style="width:100%" id="lpiSlider" onchange="document.getElementById(\'lpiValue\').textContent=this.value;updateStressSim()"><div style="font-size:10px;color:var(--text2);margin-top:4px">0 = High liquidity available | 1 = Liquidity constrained</div></div><div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px">Volatility Index (VIXc)</span><span style="font-size:12px;color:var(--accent)" id="vixValue">0.15</span></div><input type="range" min="0" max="0.3" step="0.01" value="0.15" style="width:100%" id="vixSlider" onchange="document.getElementById(\'vixValue\').textContent=this.value;updateStressSim()"><div style="font-size:10px;color:var(--text2);margin-top:4px">0 = Stable currency | 0.3 = High volatility</div></div><div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px">Risk Profile Score (RPS)</span><span style="font-size:12px;color:var(--accent)" id="rpsValue">0.2</span></div><input type="range" min="0" max="1" step="0.05" value="0.2" style="width:100%" id="rpsSlider" onchange="document.getElementById(\'rpsValue\').textContent=this.value;updateStressSim()"><div style="font-size:10px;color:var(--text2);margin-top:4px">0 = Low risk corridor | 1 = High risk</div></div></div><div id="stressResults"><div class="glass-card"><div style="font-weight:600;margin-bottom:8px">Tier 2 Stress Test Results</div><div class="revenue-breakdown"><div class="revenue-row"><span class="label">Base LP Fee</span><span class="value">$1.00</span></div><div class="revenue-row"><span class="label">Stressed LP Fee</span><span class="value" id="stressLp">$1.39</span></div><div class="revenue-row"><span class="label">Base Anchor Fee</span><span class="value">$1.00</span></div><div class="revenue-row"><span class="label">Stressed Anchor Fee</span><span class="value" id="stressAnchor">$1.39</span></div><div class="revenue-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px"><span class="label" style="font-weight:600">Multiplier</span><span class="value" id="stressMultiplier">1.39x</span></div></div></div></div></div><div class="investor-highlight"><div class="title">💡 Dynamic Pricing Model</div><div class="value">Real-time risk adjustment</div><div class="sub">Pricing automatically adjusts based on liquidity, volatility, and risk factors</div></div>';
+}
+
+function updateStressSim(){
+const lpi=parseFloat(document.getElementById('lpiSlider')?.value)||0.3;
+const vix=parseFloat(document.getElementById('vixSlider')?.value)||0.15;
+const rps=parseFloat(document.getElementById('rpsSlider')?.value)||0.2;
+const base=corridorPricing[2];
+const stressed=simulateDynamicPricing(base,lpi,vix,rps);
+document.getElementById('stressLp').textContent='$'+fmt(stressed.lp,2);
+document.getElementById('stressAnchor').textContent='$'+fmt(stressed.anchor,2);
+document.getElementById('stressMultiplier').textContent=fmt(stressed.multiplier,2)+'x';
 }
 
 function renderAdminFraud(){
