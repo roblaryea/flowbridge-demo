@@ -526,14 +526,14 @@ const TRAD_RATES={USD:{NGN:1520,INR:81.5,PHP:54.8,GHS:14.8,MXN:16.8,ZWL:340},AED
 const COMPETITORS={western_union:{name:'Western Union',markup:0.045,fee:8},moneygram:{name:'MoneyGram',markup:0.038,fee:6},wise:{name:'Wise',markup:0.012,fee:3},bank:{name:'Bank Wire',markup:0.055,fee:25}};
 
 const TOP_CORRIDORS=[
-{from:'AED',to:'NGN',vol:'$2.4M',name:'UAE → Nigeria',txCount:847,avgSize:2834,revenue:36000,fraudFlags:2},
-{from:'USD',to:'INR',vol:'$4.1M',name:'US → India',txCount:1234,avgSize:3324,revenue:61500,fraudFlags:0},
-{from:'GBP',to:'INR',vol:'$1.8M',name:'UK → India',txCount:542,avgSize:3321,revenue:27000,fraudFlags:1},
-{from:'AED',to:'PHP',vol:'$1.6M',name:'UAE → Philippines',txCount:623,avgSize:2568,revenue:24000,fraudFlags:0},
-{from:'USD',to:'MXN',vol:'$3.2M',name:'US → Mexico',txCount:1156,avgSize:2768,revenue:48000,fraudFlags:3},
-{from:'AED',to:'GHS',vol:'$890K',name:'UAE → Ghana',txCount:312,avgSize:2853,revenue:13350,fraudFlags:0},
-{from:'GBP',to:'ZWL',vol:'$520K',name:'UK → Zimbabwe',txCount:187,avgSize:2781,revenue:7800,fraudFlags:0},
-{from:'AED',to:'KES',vol:'$1.1M',name:'UAE → Kenya',txCount:398,avgSize:2764,revenue:16500,fraudFlags:1}
+{from:'AED',to:'NGN',vol:'$2.4M',name:'UAE → Nigeria',txCount:847,avgSize:2834,revenue:36000,fraudFlags:2,fromCountry:'UAE',toCountry:'Nigeria',isLive:true,lpIds:['kwame'],anchorIds:['mtn'],requiresHop:false},
+{from:'USD',to:'INR',vol:'$4.1M',name:'US → India',txCount:1234,avgSize:3324,revenue:61500,fraudFlags:0,fromCountry:'USA',toCountry:'India',isLive:true,lpIds:['raj'],anchorIds:['upi'],requiresHop:false},
+{from:'GBP',to:'INR',vol:'$1.8M',name:'UK → India',txCount:542,avgSize:3321,revenue:27000,fraudFlags:1,fromCountry:'UK',toCountry:'India',isLive:true,lpIds:['raj'],anchorIds:['upi'],requiresHop:false},
+{from:'AED',to:'PHP',vol:'$1.6M',name:'UAE → Philippines',txCount:623,avgSize:2568,revenue:24000,fraudFlags:0,fromCountry:'UAE',toCountry:'Philippines',isLive:true,lpIds:['kwame','chen'],anchorIds:['gcash'],requiresHop:true,hopPath:['kwame','chen']},
+{from:'USD',to:'MXN',vol:'$3.2M',name:'US → Mexico',txCount:1156,avgSize:2768,revenue:48000,fraudFlags:3,fromCountry:'USA',toCountry:'Mexico',isLive:true,lpIds:['jose'],anchorIds:['jose'],requiresHop:false},
+{from:'AED',to:'GHS',vol:'$890K',name:'UAE → Ghana',txCount:312,avgSize:2853,revenue:13350,fraudFlags:0,fromCountry:'UAE',toCountry:'Ghana',isLive:true,lpIds:['kwame'],anchorIds:['kwame'],requiresHop:false},
+{from:'GBP',to:'ZWL',vol:'$520K',name:'UK → Zimbabwe',txCount:187,avgSize:2781,revenue:7800,fraudFlags:0,fromCountry:'UK',toCountry:'Zimbabwe',isLive:true,lpIds:['kwame'],anchorIds:['ecocash'],requiresHop:false},
+{from:'AED',to:'KES',vol:'$1.1M',name:'UAE → Kenya',txCount:398,avgSize:2764,revenue:16500,fraudFlags:1,fromCountry:'UAE',toCountry:'Kenya',isLive:true,lpIds:['kwame'],anchorIds:['mpesa'],requiresHop:false}
 ];
 
 const TIER_LIMITS={bronze:{daily:500,monthly:2000,perTx:300,label:'Bronze'},silver:{daily:2000,monthly:10000,perTx:1500,label:'Silver'},gold:{daily:5000,monthly:25000,perTx:4000,label:'Gold'},platinum:{daily:15000,monthly:100000,perTx:10000,label:'Platinum'}};
@@ -549,23 +549,23 @@ const USERS={
 
 let activeSenderId='aisha'; // Currently selected sender
 
-// Multi-LP profiles
+// Multi-LP profiles with routing capabilities
 const LP_PROFILES={
-  kwame:{name:'Kwame (Africa)',avatar:'🏦',region:'Africa',revenue:18472,positions:{AED_NGN:{available:125000,locked:45000,rate:431.5,util:0.265},AED_GHS:{available:55000,locked:15000,rate:4.21,util:0.214},AED_KES:{available:42000,locked:8000,rate:42,util:0.16}}},
-  jose:{name:'Jose (LatAm)',avatar:'🌎',region:'LatAm',revenue:23150,positions:{USD_MXN:{available:98000,locked:35000,rate:17.2,util:0.263},GBP_MXN:{available:45000,locked:12000,rate:21.8,util:0.21}}},
-  raj:{name:'Raj (India)',avatar:'🇮🇳',region:'India',revenue:31200,positions:{USD_INR:{available:89000,locked:31000,rate:83.3,util:0.258},GBP_INR:{available:67000,locked:18000,rate:105,util:0.212}}},
-  chen:{name:'Chen (Asia)',avatar:'🇨🇳',region:'Asia',revenue:27800,positions:{AED_PHP:{available:67000,locked:23000,rate:15.2,util:0.256},USD_PHP:{available:78000,locked:22000,rate:56.1,util:0.22}}}
+  kwame:{name:'Kwame (Africa)',avatar:'🏦',region:'Africa',homeCountry:'Ghana',revenue:18472,status:'active',positions:{AED_NGN:{available:125000,locked:45000,rate:431.5,util:0.265},AED_GHS:{available:55000,locked:15000,rate:4.21,util:0.214},AED_KES:{available:42000,locked:8000,rate:42,util:0.16}},supportedCorridors:['AED_NGN','AED_GHS','AED_KES','GBP_NGN'],canHopTo:['chen']},
+  jose:{name:'Jose (LatAm)',avatar:'🌎',region:'LatAm',homeCountry:'Mexico',revenue:23150,status:'active',positions:{USD_MXN:{available:98000,locked:35000,rate:17.2,util:0.263},GBP_MXN:{available:45000,locked:12000,rate:21.8,util:0.21}},supportedCorridors:['USD_MXN','GBP_MXN'],canHopTo:[]},
+  raj:{name:'Raj (India)',avatar:'🇮🇳',region:'India',homeCountry:'India',revenue:31200,status:'active',positions:{USD_INR:{available:89000,locked:31000,rate:83.3,util:0.258},GBP_INR:{available:67000,locked:18000,rate:105,util:0.212}},supportedCorridors:['USD_INR','GBP_INR','AED_INR'],canHopTo:[]},
+  chen:{name:'Chen (Asia)',avatar:'🇨🇳',region:'Asia',homeCountry:'Philippines',revenue:27800,status:'active',positions:{AED_PHP:{available:67000,locked:23000,rate:15.2,util:0.256},USD_PHP:{available:78000,locked:22000,rate:56.1,util:0.22}},supportedCorridors:['AED_PHP','USD_PHP','GBP_PHP'],canHopTo:[]}
 };
 
 let activeLPId='kwame';
 
-// Multi-Anchor profiles
+// Multi-Anchor profiles with corridor support
 const ANCHOR_PROFILES={
-  mpesa:{name:'M-Pesa Kenya',avatar:'🇰🇪',country:'Kenya',currency:'KES',pending:3,completed:47,balance:125000,commission:2340},
-  gcash:{name:'GCash Philippines',avatar:'🇵🇭',country:'Philippines',currency:'PHP',pending:2,completed:38,balance:89000,commission:1890},
-  upi:{name:'UPI India',avatar:'🇮🇳',country:'India',currency:'INR',pending:1,completed:62,balance:156000,commission:3100},
-  mtn:{name:'MTN Mobile Money',avatar:'🇳🇬',country:'Nigeria',currency:'NGN',pending:4,completed:55,balance:187000,commission:2750},
-  ecocash:{name:'EcoCash Zimbabwe',avatar:'🇿🇼',country:'Zimbabwe',currency:'ZWL',pending:1,completed:24,balance:34000,commission:850}
+  mpesa:{name:'M-Pesa Kenya',avatar:'🇰🇪',country:'Kenya',currency:'KES',pending:3,completed:47,balance:125000,commission:2340,supportedCorridors:['AED_KES','USD_KES','GBP_KES'],status:'active'},
+  gcash:{name:'GCash Philippines',avatar:'🇵🇭',country:'Philippines',currency:'PHP',pending:2,completed:38,balance:89000,commission:1890,supportedCorridors:['AED_PHP','USD_PHP','GBP_PHP'],status:'active'},
+  upi:{name:'UPI India',avatar:'🇮🇳',country:'India',currency:'INR',pending:1,completed:62,balance:156000,commission:3100,supportedCorridors:['USD_INR','GBP_INR','AED_INR'],status:'active'},
+  mtn:{name:'MTN Mobile Money',avatar:'🇳🇬',country:'Nigeria',currency:'NGN',pending:4,completed:55,balance:187000,commission:2750,supportedCorridors:['AED_NGN','USD_NGN','GBP_NGN'],status:'active'},
+  ecocash:{name:'EcoCash Zimbabwe',avatar:'🇿🇼',country:'Zimbabwe',currency:'ZWL',pending:1,completed:24,balance:34000,commission:850,supportedCorridors:['GBP_ZWL','USD_ZWL'],status:'active'}
 };
 
 let activeAnchorId='mpesa';
