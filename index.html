@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>FlowBridge - Global Settlement Protocol | Investor Demo v4</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#06080d;--bg2:#0d1117;--bg3:#161b22;--bg4:#21262d;--accent:#58a6ff;--accent2:#79c0ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;--purple:#a371f7;--pink:#f778ba;--cyan:#39d353;--text:#e6edf3;--text2:#8b949e;--text3:#484f58;--border:rgba(48,54,61,0.8);--glass:rgba(13,17,23,0.85)}
+:root{--bg:#06080d;--bg2:#0d1117;--bg3:#161b22;--bg4:#21262d;--accent:#58a6ff;--accent2:#79c0ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;--purple:#a371f7;--pink:#f778ba;--cyan:#39d353;--text:#e6edf3;--text2:#8b949e;--text3:#484f58;--border:rgba(48,54,61,0.8);--glass:rgba(13,17,23,0.85);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0;padding:0}
 body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .ambient{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 100% 80% at 50% -30%,rgba(88,166,255,0.08),transparent),radial-gradient(ellipse 60% 60% at 100% 50%,rgba(63,185,80,0.04),transparent)}
 .demo-bar{position:fixed;top:0;left:0;right:0;background:linear-gradient(90deg,#161b22,#0d1117);border-bottom:1px solid var(--border);padding:10px 20px;z-index:1000;display:flex;align-items:center;justify-content:space-between;gap:16px}
@@ -242,9 +243,9 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 .notif-item.warning{border-color:rgba(210,153,34,0.3);background:rgba(210,153,34,0.05)}
 .notif-item.info{border-color:rgba(88,166,255,0.3);background:rgba(88,166,255,0.05)}
 .notif-item .time{font-size:10px;color:var(--text3);margin-top:4px}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;visibility:hidden;transition:all 0.3s;padding:16px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;visibility:hidden;transition:all 0.3s;padding:16px;padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(16px + env(safe-area-inset-bottom))}
 .modal-overlay.active{opacity:1;visibility:visible}
-.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:560px;width:90%;max-height:85vh;overflow-y:auto;transform:scale(0.9);transition:transform 0.3s}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:560px;width:90%;max-height:calc(85vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto;transform:scale(0.9);transition:transform 0.3s}
 .modal-overlay.active .modal{transform:scale(1)}
 @media(max-width:640px){
 .modal{padding:20px;max-height:90vh;width:95%;border-radius:16px}
@@ -266,7 +267,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 .match-stat{padding:12px;background:var(--bg3);border-radius:10px}
 .match-stat-label{font-size:10px;color:var(--text2);text-transform:uppercase;margin-bottom:4px}
 .match-stat-value{font-weight:600}
-.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:12px;z-index:3000;transform:translateY(100px);opacity:0;transition:all 0.3s}
+.toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));right:24px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:12px;z-index:3000;transform:translateY(100px);opacity:0;transition:all 0.3s}
 .toast.active{transform:translateY(0);opacity:1}
 .toast.success{border-color:var(--green);background:linear-gradient(135deg,var(--bg2),rgba(63,185,80,0.1))}
 .toast.error{border-color:var(--red);background:linear-gradient(135deg,var(--bg2),rgba(248,81,73,0.1))}
@@ -342,7 +343,8 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 /* ============ MOBILE RESPONSIVE FIXES ============ */
 /* Safe area padding for notched devices */
 body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
-.app{padding-top:calc(52px + env(safe-area-inset-top))}
+.app{padding-top:calc(52px + env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.content{padding-bottom:calc(40px + env(safe-area-inset-bottom))}
 
 /* CRITICAL FIX: Add extra top padding on mobile when demo bar wraps */
 @media(max-width:800px){
