@@ -157,8 +157,8 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 .savings-highlight{background:linear-gradient(135deg,rgba(63,185,80,0.15),rgba(57,211,83,0.1));border:1px solid rgba(63,185,80,0.3);border-radius:10px;padding:12px;margin-top:12px;text-align:center}
 .savings-highlight .amount{font-size:20px;font-weight:700;color:var(--green)}
 .savings-highlight .label{font-size:11px;color:var(--text2)}
-.swipe-container{position:relative;max-width:400px;margin:0 auto;min-height:500px;padding-bottom:100px}
-.swipe-card{position:absolute;width:100%;background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:24px;cursor:grab;transition:transform 0.3s,opacity 0.3s;user-select:none;margin-bottom:20px}
+.swipe-container{position:relative;max-width:400px;margin:0 auto;height:460px}
+.swipe-card{position:absolute;width:100%;background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:24px;cursor:grab;transition:transform 0.3s,opacity 0.3s;user-select:none}
 .swipe-card:active{cursor:grabbing}
 .swipe-card.dragging{transition:none}
 .swipe-card .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
@@ -174,7 +174,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 .swipe-card .detail-item{padding:12px;background:var(--bg4);border-radius:10px}
 .swipe-card .detail-label{font-size:10px;color:var(--text2);text-transform:uppercase;margin-bottom:4px}
 .swipe-card .detail-value{font-weight:600}
-.swipe-actions{display:flex;justify-content:center;gap:20px;margin-top:20px;position:relative;z-index:10}
+.swipe-actions{display:flex;justify-content:center;gap:20px;margin-top:20px}
 .swipe-btn{width:64px;height:64px;border-radius:50%;border:2px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:all 0.2s}
 .swipe-btn.pass:hover{border-color:var(--red);background:rgba(248,81,73,0.1);transform:scale(1.1)}
 .swipe-btn.match:hover{border-color:var(--green);background:rgba(63,185,80,0.1);transform:scale(1.1)}
@@ -494,7 +494,6 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bot
 <button class="mode-btn" id="modeBtn" onclick="toggleMode()" title="Toggle guided/free mode">🎯 Mode</button>
 <button class="guided-btn" id="guidedBtn" onclick="toggleGuidedDemo()" title="Toggle step-by-step guidance">🎓 Guide</button>
 <button class="reset-btn" onclick="resetDemo()" title="Reset all demo state">↺ Reset</button>
-<button class="reset-btn" onclick="showKeyboardShortcutsModal()" title="View keyboard shortcuts">⌨️</button>
 </div>
 </div>
 <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="toggleMobileMenu()"></div>
@@ -522,8 +521,7 @@ const CURRENCIES={USD:{name:'US Dollar',symbol:'$',flag:'🇺🇸'},AED:{name:'U
 
 // Amount mode state
 let amountMode = 'send'; // 'send' or 'receive'
-let pricingCollapsed = true;
-let recipientCollapsed = true; // Recipient section collapsed by default
+let pricingCollapsed = false;
 
 const RATES={USD:{NGN:1580,INR:83.2,PHP:56.1,KES:154,GHS:15.4,ZAR:18.7,MXN:17.2,PKR:278,BDT:110,GBP:0.79,EUR:0.92,AED:3.67,ZWL:363},AED:{NGN:430,INR:22.6,PHP:15.2,KES:42,GHS:4.2,ZAR:5.1,PKR:75.6,BDT:30,USD:0.272,GBP:0.215,EUR:0.25,ZWL:99},GBP:{NGN:2000,INR:105,PHP:71,KES:195,GHS:19.5,ZAR:23.7,USD:1.27,EUR:1.17,AED:4.65,ZWL:460,PKR:352},EUR:{NGN:1720,INR:90.5,PHP:61,USD:1.09,GBP:0.86,AED:4.0,ZWL:395}};
 
@@ -639,48 +637,14 @@ const RECIPIENTS=[
 {id:'RCP-005',name:'Emeka Obi',country:'Nigeria',flag:'🇳🇬',method:'Bank Transfer',account:'**** 7712',cur:'NGN'}
 ];
 
-// Enhanced SWIPE data with multiple LPs per corridor
 const SWIPE=[
-  // AED → NGN corridor (Nigeria) - Exactly 3 LPs
-  {id:'AED_NGN_LP1',corridor:'AED-NGN',name:'Ibrahim T.',flag:'🇳🇬',city:'Lagos, Nigeria',proximity:'Cross-border LP',lpType:'Nigeria-based LP',reliability:85,settlement:'5 min',rateDeltaPct:-0.12,score:72,avatar:'#ef4444',badgeHint:'Closest LP',lpProfileId:'kwame'},
-  {id:'AED_NGN_LP2',corridor:'AED-NGN',name:'Fatima A.',flag:'🇳🇬',city:'Sharjah, UAE',proximity:'Local LP',lpType:'Local Exchange',reliability:89,settlement:'2 min',rateDeltaPct:0.38,score:81,avatar:'#a855f7',badgeHint:'Fastest payout',lpProfileId:'kwame'},
-  {id:'AED_NGN_LP3',corridor:'AED-NGN',name:'Yusuf K.',flag:'🇳🇬',city:'Dubai, UAE',proximity:'Local LP',lpType:'Regional Bank',reliability:96,settlement:'3 min',rateDeltaPct:0.74,score:85,avatar:'#3b82f6',badgeHint:'Best rate',lpProfileId:'kwame'},
-  
-  // AED → PHP corridor (Philippines) - Exactly 3 LPs
-  {id:'AED_PHP_LP1',corridor:'AED-PHP',name:'Carlos M.',flag:'🇵🇭',city:'Cebu, Philippines',proximity:'Regional LP',lpType:'Regional Branch',reliability:84,settlement:'5 min',rateDeltaPct:1.32,score:77,avatar:'#f43f5e',badgeHint:'Best rate',lpProfileId:'chen'},
-  {id:'AED_PHP_LP2',corridor:'AED-PHP',name:'Maria S.',flag:'🇵🇭',city:'Manila, Philippines',proximity:'Regional LP',lpType:'Philippines Desk',reliability:89,settlement:'4 min',rateDeltaPct:0.66,score:80,avatar:'#ec4899',badgeHint:'Fastest payout',lpProfileId:'chen'},
-  {id:'AED_PHP_LP3',corridor:'AED-PHP',name:'Jose R.',flag:'🇵🇭',city:'Dubai, UAE',proximity:'Local LP',lpType:'UAE-PH Partner',reliability:91,settlement:'3 min',rateDeltaPct:0.52,score:82,avatar:'#14b8a6',badgeHint:'Closest LP',lpProfileId:'chen'},
-  
-  // USD → INR corridor (India) - Exactly 3 LPs
-  {id:'USD_INR_LP1',corridor:'USD-INR',name:'Raj P.',flag:'🇮🇳',city:'Delhi, India',proximity:'Local LP',lpType:'Local FX Partner',reliability:97,settlement:'1 min',rateDeltaPct:0.42,score:88,avatar:'#f59e0b',badgeHint:'Fastest payout',lpProfileId:'raj'},
-  {id:'USD_INR_LP2',corridor:'USD-INR',name:'Priya K.',flag:'🇮🇳',city:'Mumbai, India',proximity:'Regional LP',lpType:'Regional FX Desk',reliability:90,settlement:'5 min',rateDeltaPct:0.58,score:82,avatar:'#8b5cf6',badgeHint:'Best rate',lpProfileId:'raj'},
-  {id:'USD_INR_LP3',corridor:'USD-INR',name:'Amit S.',flag:'🇮🇳',city:'Bangalore, India',proximity:'Cross-border LP',lpType:'Tech Hub Exchange',reliability:93,settlement:'3 min',rateDeltaPct:0.31,score:85,avatar:'#06b6d4',badgeHint:'Closest LP',lpProfileId:'raj'},
-  
-  // AED → GHS corridor (Ghana) - Exactly 3 LPs
-  {id:'AED_GHS_LP1',corridor:'AED-GHS',name:'Ama K.',flag:'🇬🇭',city:'Dubai, UAE',proximity:'Local LP',lpType:'Premium Exchange',reliability:94,settlement:'2 min',rateDeltaPct:0.71,score:83,avatar:'#eab308',badgeHint:'Best rate',lpProfileId:'kwame'},
-  {id:'AED_GHS_LP2',corridor:'AED-GHS',name:'Kofi A.',flag:'🇬🇭',city:'Dubai, UAE',proximity:'Local LP',lpType:'Local FX Partner',reliability:91,settlement:'3 min',rateDeltaPct:0.24,score:75,avatar:'#10b981',badgeHint:'Fastest payout',lpProfileId:'kwame'},
-  {id:'AED_GHS_LP3',corridor:'AED-GHS',name:'Kwame B.',flag:'🇬🇭',city:'Accra, Ghana',proximity:'Cross-border LP',lpType:'Ghana-based',reliability:87,settlement:'4 min',rateDeltaPct:-0.24,score:79,avatar:'#14b8a6',badgeHint:'Closest LP',lpProfileId:'kwame'},
-  
-  // GBP → ZWL corridor (Zimbabwe) - Exactly 3 LPs
-  {id:'GBP_ZWL_LP1',corridor:'GBP-ZWL',name:'Tendai M.',flag:'🇿🇼',city:'Harare, Zimbabwe',proximity:'Cross-border LP',lpType:'Local MTO',reliability:80,settlement:'6 min',rateDeltaPct:0.22,score:71,avatar:'#6366f1',badgeHint:'Closest LP',lpProfileId:'kwame'},
-  {id:'GBP_ZWL_LP2',corridor:'GBP-ZWL',name:'Rudo K.',flag:'🇿🇼',city:'London, UK',proximity:'Local LP',lpType:'UK-Zimbabwe Desk',reliability:88,settlement:'4 min',rateDeltaPct:0.48,score:79,avatar:'#ef4444',badgeHint:'Best rate',lpProfileId:'kwame'},
-  {id:'GBP_ZWL_LP3',corridor:'GBP-ZWL',name:'Tafadzwa N.',flag:'🇿🇼',city:'Bulawayo, Zimbabwe',proximity:'Regional LP',lpType:'Zimbabwe Partner',reliability:83,settlement:'5 min',rateDeltaPct:-0.15,score:74,avatar:'#10b981',badgeHint:'Fastest payout',lpProfileId:'kwame'},
-  
-  // USD → MXN corridor (Mexico) - Exactly 3 LPs
-  {id:'USD_MXN_LP1',corridor:'USD-MXN',name:'Maria L.',flag:'🇲🇽',city:'Mexico City',proximity:'Local LP',lpType:'Local Bank',reliability:95,settlement:'2 min',rateDeltaPct:0.38,score:83,avatar:'#f97316',badgeHint:'Fastest payout',lpProfileId:'jose'},
-  {id:'USD_MXN_LP2',corridor:'USD-MXN',name:'Carlos G.',flag:'🇲🇽',city:'Guadalajara',proximity:'Regional LP',lpType:'Regional Exchange',reliability:89,settlement:'3 min',rateDeltaPct:0.52,score:81,avatar:'#3b82f6',badgeHint:'Best rate',lpProfileId:'jose'},
-  {id:'USD_MXN_LP3',corridor:'USD-MXN',name:'Ana R.',flag:'🇲🇽',city:'Monterrey',proximity:'Cross-border LP',lpType:'North Mexico Desk',reliability:91,settlement:'4 min',rateDeltaPct:0.19,score:78,avatar:'#ec4899',badgeHint:'Closest LP',lpProfileId:'jose'}
+{id:'SW-001',name:'Emeka O.',flag:'🇳🇬',from:'AED',to:'NGN',amount:2000,rate:432,score:78,time:'2 min',avatar:'#f97316',location:'Dubai, UAE',lpType:'Local MTO',reliability:'High'},
+{id:'SW-002',name:'Priya S.',flag:'🇮🇳',from:'USD',to:'INR',amount:1500,rate:83.5,score:82,time:'5 min',avatar:'#8b5cf6',location:'Mumbai, India',lpType:'Regional FX Desk',reliability:'High'},
+{id:'SW-003',name:'Kofi A.',flag:'🇬🇭',from:'AED',to:'GHS',amount:800,rate:4.22,score:75,time:'3 min',avatar:'#10b981',location:'Dubai, UAE',lpType:'Local FX Partner',reliability:'High'},
+{id:'SW-004',name:'Grace M.',flag:'🇵🇭',from:'AED',to:'PHP',amount:1200,rate:15.3,score:80,time:'4 min',avatar:'#ec4899',location:'Manila, Philippines',lpType:'Regional Desk',reliability:'High'},
+{id:'SW-005',name:'Raj P.',flag:'🇮🇳',from:'USD',to:'INR',amount:2500,rate:83.4,score:88,time:'1 min',avatar:'#f59e0b',location:'Delhi, India',lpType:'Local FX Partner',reliability:'Excellent'},
+{id:'SW-006',name:'Tendai M.',flag:'🇿🇼',from:'GBP',to:'ZWL',amount:500,rate:462,score:71,time:'6 min',avatar:'#6366f1',location:'Harare, Zimbabwe',lpType:'Local MTO',reliability:'Standard'}
 ];
-
-// Compute LP rates at initialization
-SWIPE.forEach(lp=>{
-  const baseRate=getRate(lp.from||lp.corridor.split('-')[0],lp.to||lp.corridor.split('-')[1]);
-  lp.from=lp.from||lp.corridor.split('-')[0];
-  lp.to=lp.to||lp.corridor.split('-')[1];
-  lp.lpRate=baseRate*(1+(lp.rateDeltaPct||0)/100);
-  lp.fbRate=baseRate;
-  lp.location=lp.city; // For backward compatibility
-});
 
 const SCENARIOS={
 A:{name:'Instant Send',desc:'UAE migrant worker sends 500 AED to Ghana',corridor:{from:'AED',to:'GHS'},amount:500,recipient:RECIPIENTS[0],schedule:'now',premium:false,user:'aisha'},
@@ -702,38 +666,6 @@ let currentRole='sender',currentView='dashboard',notifications=[],DEMO_TX=null,t
 let guidedMode=false,guidedStep=0,freeMode=false; // Mode flags
 let TOTAL_SAVINGS=847293,LP_REVENUE=18472,ANCHOR_REVENUE=12340;
 let BUSINESS_METRICS={totalVolume:2847293,txCount:1847,avgTxSize:1541,revenueTotal:42847,revenueFX:28400,revenuePremium:8200,revenueLP:4100,revenueAnchor:2147};
-
-// Admin Revenue date filter state
-let ADMIN_REVENUE_RANGE='LAST_30';
-
-// Demo revenue streams (subscription & future revenues)
-const DEMO_REVENUE_STREAMS={
-  lpSubscriptions:2500,
-  anchorSubscriptions:1800,
-  institutionalApi:900,
-  dataAnalytics:0
-};
-
-// ============ LP QUOTES SYSTEM ============
-let LP_QUOTES = []; // Array to store LP quotes for transactions
-let LP_REQUESTS = []; // Array to store pending quote requests from senders
-let ACTIVE_TX_ID = null; // Currently selected transaction for FlowSwipe
-let SWIPE_INDEX = {}; // Track swipe index per transaction
-
-// ============ PRICING BANDS SYSTEM ============
-const PRICING_BANDS = {
-  default: { minDeltaPct: -5, maxDeltaPct: 2 }
-  // Optional per-corridor overrides can be added here
-};
-
-// Helper function to clamp LP rate delta within allowed bands
-function clampDelta(corridor, deltaPct) {
-  const band = PRICING_BANDS[corridor] || PRICING_BANDS.default;
-  return Math.min(band.maxDeltaPct, Math.max(band.minDeltaPct, deltaPct));
-}
-
-// ============ LP CORRIDOR FILTER ============
-let LP_CORRIDOR_FILTER = 'ALL'; // Current corridor filter for LP views
 
 // ============ ISSUES SYSTEM ============
 let ISSUES = [];
@@ -829,137 +761,9 @@ const CORRIDOR_TX_HISTORY={
 ]
 };
 
-// ============ ADMIN REVENUE DATE FILTERING ============
-// State for custom date range
-let ADMIN_REVENUE_CUSTOM_FROM = null;
-let ADMIN_REVENUE_CUSTOM_TO = null;
-
-function getAdminRevenueDateRange(){
-  const value=ADMIN_REVENUE_RANGE;
-  const now=new Date();
-  let from=null;
-  let to=now;
-  
-  if(value==='LAST_7')from=new Date(now.getTime()-7*86400000);
-  else if(value==='LAST_30')from=new Date(now.getTime()-30*86400000);
-  else if(value==='LAST_90')from=new Date(now.getTime()-90*86400000);
-  else if(value==='MTD')from=new Date(now.getFullYear(),now.getMonth(),1);
-  else if(value==='YTD')from=new Date(now.getFullYear(),0,1);
-  else if(value==='CUSTOM'){
-    from=ADMIN_REVENUE_CUSTOM_FROM?new Date(ADMIN_REVENUE_CUSTOM_FROM):null;
-    to=ADMIN_REVENUE_CUSTOM_TO?new Date(ADMIN_REVENUE_CUSTOM_TO):now;
-  }
-  // 'ALL' => from stays null
-  
-  return{from,to,mode:value};
-}
-
-function setCustomRevenueDate(type,value){
-  if(type==='from'){
-    ADMIN_REVENUE_CUSTOM_FROM=value;
-  }else{
-    ADMIN_REVENUE_CUSTOM_TO=value;
-  }
-  render();
-}
-
-function computeRevenueBreakdown(){
-  const{from,to,mode}=getAdminRevenueDateRange();
-  
-  // Calculate days in range for proportional revenue
-  let daysInRange=30; // default
-  if(from&&to){
-    daysInRange=Math.max(1,Math.ceil((to-from)/(1000*60*60*24)));
-  }else if(mode==='LAST_7'){
-    daysInRange=7;
-  }else if(mode==='LAST_30'){
-    daysInRange=30;
-  }else if(mode==='LAST_90'){
-    daysInRange=90;
-  }else if(mode==='MTD'){
-    const now=new Date();
-    daysInRange=now.getDate();
-  }else if(mode==='YTD'){
-    const now=new Date();
-    const startOfYear=new Date(now.getFullYear(),0,1);
-    daysInRange=Math.ceil((now-startOfYear)/(1000*60*60*24));
-  }else if(mode==='ALL'){
-    daysInRange=365; // assume 1 year of data
-  }
-  
-  // Filter transactions by date range
-  const filteredTxs=txHistory.filter(t=>{
-    if(!t.timestamp)return false;
-    const d=new Date(t.timestamp);
-    if(from&&d<from)return false;
-    if(to&&d>to)return false;
-    return true;
-  });
-  
-  // Calculate transaction fee revenue from filtered transactions
-  let transactionFees=0;
-  filteredTxs.forEach(t=>{
-    if(t.status==='completed'&&t.amount){
-      const amt=t.amount||0;
-      transactionFees+=amt*0.012; // 1.2% fee
-    }
-  });
-  
-  // Generate realistic revenue based on time period
-  // Base daily rates (revenue per day)
-  const dailyRates={
-    transactionFees:850, // avg $850/day from tx fees
-    lpSubscriptions:83, // $2500/month = ~$83/day
-    anchorSubscriptions:60, // $1800/month = ~$60/day
-    senderPremium:50, // avg $50/day from premium
-    institutionalApi:30, // $900/month = ~$30/day
-    dataAnalytics:10 // growing, ~$10/day
-  };
-  
-  // Add randomization factor (±15%) for realism
-  const randomFactor=()=>0.85+Math.random()*0.3;
-  
-  // Calculate proportional revenue based on days in range
-  const breakdown={
-    transactionFees:transactionFees>0?transactionFees:Math.round(dailyRates.transactionFees*daysInRange*randomFactor()),
-    lpSubscriptions:Math.round(dailyRates.lpSubscriptions*daysInRange*randomFactor()),
-    anchorSubscriptions:Math.round(dailyRates.anchorSubscriptions*daysInRange*randomFactor()),
-    senderPremium:filteredTxs.filter(t=>t.premium&&t.status==='completed').length*5||Math.round(dailyRates.senderPremium*daysInRange*randomFactor()),
-    institutionalApi:Math.round(dailyRates.institutionalApi*daysInRange*randomFactor()),
-    dataAnalytics:Math.round(dailyRates.dataAnalytics*daysInRange*randomFactor())
-  };
-  
-  // Calculate total
-  const totalRevenue=
-    breakdown.transactionFees+
-    breakdown.lpSubscriptions+
-    breakdown.anchorSubscriptions+
-    breakdown.senderPremium+
-    breakdown.institutionalApi+
-    breakdown.dataAnalytics;
-  
-  return{breakdown,totalRevenue};
-}
-
 // ============ UTILITY FUNCTIONS ============
 function fmt(n,d=2){if(n===null||n===undefined)return'0';return new Intl.NumberFormat('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n)}
-function fmtAmount(n){if(isNaN(n)||n===null||n===undefined)return'0.00';return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function fmtCur(amt,cur){const c=CURRENCIES[cur];return c?(c.symbol||'')+fmt(amt):'$'+fmt(amt)}
-
-// Currency metadata for enhanced display
-const CURRENCY_META={
-  AED:{symbol:'د.إ',flag:'🇦🇪'},
-  USD:{symbol:'$',flag:'🇺🇸'},
-  INR:{symbol:'₹',flag:'🇮🇳'},
-  GBP:{symbol:'£',flag:'🇬🇧'},
-  EUR:{symbol:'€',flag:'🇪🇺'},
-  PHP:{symbol:'₱',flag:'🇵🇭'},
-  NGN:{symbol:'₦',flag:'🇳🇬'},
-  GHS:{symbol:'₵',flag:'🇬🇭'},
-  KES:{symbol:'KSh',flag:'🇰🇪'},
-  MXN:{symbol:'$',flag:'🇲🇽'},
-  ZWL:{symbol:'Z$',flag:'🇿🇼'}
-};
 function getRate(from,to){if(from===to)return 1;if(RATES[from]&&RATES[from][to])return RATES[from][to];if(RATES[to]&&RATES[to][from])return 1/RATES[to][from];if(RATES[from]&&RATES[from]['USD']&&RATES['USD']&&RATES['USD'][to])return RATES[from]['USD']*RATES['USD'][to];return 430} // Default fallback
 function getTradRate(from,to){if(TRAD_RATES[from]&&TRAD_RATES[from][to])return TRAD_RATES[from][to];const r=getRate(from,to);return r?r*0.96:null}
 function calcReceive(amt,from,to){const r=getRate(from,to);return r?amt*r:0}
@@ -1162,23 +966,7 @@ openModal(html);
 function addLiquidity(){
   const pair=document.getElementById('liqPair')?.value;
   const amt=parseInt(document.getElementById('liqAmount')?.value)||10000;
-  
-  // VALIDATION: Check minimum amount
-  if(amt<1000){
-    showToast('❌ Minimum liquidity amount is $1,000','error');
-    return;
-  }
-  
-  // VALIDATION: Check maximum reasonable amount
-  if(amt>1000000){
-    showToast('❌ Maximum liquidity amount is $1,000,000','error');
-    return;
-  }
-  
-  if(LP_STATE[pair]){
-    LP_STATE[pair].available+=amt;
-    LP_STATE[pair].util=LP_STATE[pair].locked/(LP_STATE[pair].available+LP_STATE[pair].locked);
-  }
+  if(LP_STATE[pair]){LP_STATE[pair].available+=amt;LP_STATE[pair].util=LP_STATE[pair].locked/(LP_STATE[pair].available+LP_STATE[pair].locked)}
   forceCloseModal();
   showToast('💰 Added $'+fmt(amt,0)+' liquidity to '+pair.replace('_',' → '),'success');
   pushNotif('Liquidity position updated for '+pair.replace('_',' → '),'success','lp');
@@ -1194,35 +982,16 @@ openModal(html);
 function withdrawLiquidity(){
   const pair=document.getElementById('withdrawPair')?.value;
   const amt=parseInt(document.getElementById('withdrawAmount')?.value)||5000;
-  
-  // VALIDATION: Check if pair exists
-  if(!LP_STATE[pair]){
-    showToast('❌ Invalid currency pair','error');
+  if(LP_STATE[pair]){
+    const maxAvail=LP_STATE[pair].available;
+    const actual=Math.min(amt,maxAvail);
+    LP_STATE[pair].available-=actual;
+    LP_STATE[pair].util=LP_STATE[pair].locked/(LP_STATE[pair].available+LP_STATE[pair].locked)||0;
     forceCloseModal();
-    return;
+    showToast('💸 Withdrew $'+fmt(actual,0)+' from '+pair.replace('_',' → '),'success');
+    pushNotif('Liquidity withdrawn from '+pair.replace('_',' → '),'info','lp');
+    if(currentRole==='lp')render();
   }
-  
-  const maxAvail=LP_STATE[pair].available;
-  
-  // VALIDATION: Check if amount is valid
-  if(amt<=0){
-    showToast('❌ Withdrawal amount must be greater than 0','error');
-    return;
-  }
-  
-  // VALIDATION: Check if sufficient funds available
-  if(amt>maxAvail){
-    showToast('❌ Insufficient available liquidity. Max: $'+fmt(maxAvail,0),'error');
-    return;
-  }
-  
-  const actual=Math.min(amt,maxAvail);
-  LP_STATE[pair].available-=actual;
-  LP_STATE[pair].util=LP_STATE[pair].locked/(LP_STATE[pair].available+LP_STATE[pair].locked)||0;
-  forceCloseModal();
-  showToast('💸 Withdrew $'+fmt(actual,0)+' from '+pair.replace('_',' → '),'success');
-  pushNotif('Liquidity withdrawn from '+pair.replace('_',' → '),'info','lp');
-  if(currentRole==='lp')render();
 }
 
 // ============ FRAUD & REVIEW MODALS ============
@@ -1278,34 +1047,6 @@ const rate=getRate(tx.fromCur,tx.toCur),tradRate=getTradRate(tx.fromCur,tx.toCur
 const recv=tx.amount*rate;
 const html='<div class="match-summary"><div class="match-icon">🎉</div><div class="match-title">Transfer Complete!</div><div class="match-detail">'+(tx.recipient?.name||'Recipient')+' received '+fmt(recv,0)+' '+(tx.toCur||'GHS')+'</div><div class="match-stats"><div class="match-stat"><div class="match-stat-label">You Sent</div><div class="match-stat-value">'+fmtCur(tx.amount,tx.fromCur)+'</div></div><div class="match-stat"><div class="match-stat-label">They Got</div><div class="match-stat-value">'+fmt(recv,0)+' '+tx.toCur+'</div></div><div class="match-stat"><div class="match-stat-label">FlowBridge Rate</div><div class="match-stat-value" style="color:var(--green)">'+fmt(rate,2)+'</div></div><div class="match-stat"><div class="match-stat-label">Bank Rate</div><div class="match-stat-value" style="color:var(--red);text-decoration:line-through">'+fmt(tradRate,2)+'</div></div></div>'+(savings>0?'<div class="savings-highlight" style="margin-top:16px"><div class="amount">+'+fmt(savings,0)+' '+tx.toCur+'</div><div class="label">More than bank would give!</div></div>':'')+'<div class="revenue-breakdown"><div style="font-size:11px;color:var(--text2);margin-bottom:8px">Platform Revenue Breakdown</div><div class="revenue-row"><span class="label">FX Spread (1.2%)</span><span class="value">$'+fmt(tx.amount*0.012,2)+'</span></div><div class="revenue-row"><span class="label">LP Fee</span><span class="value">$'+fmt(tx.amount*0.008,2)+'</span></div><div class="revenue-row"><span class="label">Anchor Fee</span><span class="value">$'+fmt(tx.amount*0.004,2)+'</span></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="forceCloseModal()">Close</button><button class="btn btn-primary" onclick="forceCloseModal();showToast(\'Receipt downloaded\',\'success\')">📥 Download Receipt</button></div>';
 openModal(html);
-}
-
-function showQuoteSubmitModal(txId,amount,fromCur,toCur,baseRate){
-const corridor=fromCur+'-'+toCur;
-const band=PRICING_BANDS[corridor]||PRICING_BANDS.default;
-const minRate=baseRate*(1+band.minDeltaPct/100);
-const maxRate=baseRate*(1+band.maxDeltaPct/100);
-const html='<div class="modal-header"><div class="modal-title">💰 Submit Quote</div><button class="modal-close" onclick="forceCloseModal()">✕</button></div><div style="padding:16px 0"><div style="background:var(--bg3);padding:12px;border-radius:10px;margin-bottom:16px"><div style="font-size:11px;color:var(--text2);margin-bottom:4px">REQUEST</div><div style="font-weight:600">'+fromCur+' → '+toCur+'</div><div style="font-size:12px;color:var(--text2)">'+fmtCur(amount,fromCur)+' • Base: '+fmt(baseRate,2)+'</div></div><div class="glass-card" style="margin-bottom:16px;padding:12px;background:rgba(88,166,255,0.05)"><div style="font-size:11px;color:var(--accent);margin-bottom:6px">📊 ALLOWED PRICING RANGE</div><div style="font-size:12px;color:var(--text2)">FlowBridge rate: '+fmt(baseRate,2)+' '+toCur+'</div><div style="font-size:12px;color:var(--text2);margin-top:4px">Your range: '+fmt(minRate,2)+' to '+fmt(maxRate,2)+' '+toCur+'</div><div style="font-size:10px;color:var(--text3);margin-top:6px">Allowed: '+band.minDeltaPct+'% to +'+band.maxDeltaPct+'% vs FlowBridge</div></div><div class="form-group"><label class="form-label">Your Rate (1 '+fromCur+' = ? '+toCur+')</label><div style="display:flex;gap:8px;align-items:flex-end"><input type="number" id="quoteRate" class="form-input" step="0.01" placeholder="Enter your rate" value="'+baseRate+'" min="'+minRate+'" max="'+maxRate+'" onchange="validateLPRate(this,'+minRate+','+maxRate+','+baseRate+')" style="flex:1"><button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById(\'quoteRate\').value='+baseRate+';validateLPRate(document.getElementById(\'quoteRate\'),'+minRate+','+maxRate+','+baseRate+')" title="Reset to baseline (0% delta)">↺ Reset</button></div></div><div id="rateFeedback" style="font-size:11px;margin-top:-8px;margin-bottom:12px"></div><div class="form-group"><label class="form-label">Liquidity Available</label><input type="number" id="quoteLiquidity" class="form-input" value="'+amount+'" placeholder="Amount you can provide"></div><div class="form-group"><label class="form-label">Settlement Time</label><select id="quoteSettlement" class="form-select"><option value="instant">⚡ Instant (< 5 min)</option><option value="fast">🚀 Fast (< 30 min)</option><option value="standard">⏱️ Standard (< 2 hrs)</option></select></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="forceCloseModal()">Cancel</button><button class="btn btn-primary" onclick="submitLPQuote(\''+txId+'\')">Submit Quote</button></div>';
-openModal(html);
-}
-
-function validateLPRate(input,minRate,maxRate,baseRate){
-  const rate=parseFloat(input.value);
-  const feedback=document.getElementById('rateFeedback');
-  if(!feedback)return;
-  
-  if(rate<minRate){
-    feedback.innerHTML='<span style="color:var(--red)">⚠️ Rate too low! Minimum: '+fmt(minRate,2)+'</span>';
-    input.style.borderColor='var(--red)';
-  }else if(rate>maxRate){
-    feedback.innerHTML='<span style="color:var(--red)">⚠️ Rate too high! Maximum: '+fmt(maxRate,2)+'</span>';
-    input.style.borderColor='var(--red)';
-  }else{
-    const deltaPct=((rate/baseRate-1)*100);
-    const color=deltaPct>=0?'var(--green)':'var(--yellow)';
-    feedback.innerHTML='<span style="color:'+color+'">✓ Valid rate ('+fmt(deltaPct,2)+'% vs FlowBridge)</span>';
-    input.style.borderColor='var(--green)';
-  }
 }
 
 // ============ MOBILE MENU ============
@@ -1369,12 +1110,6 @@ function updateToCurrency(cur){
   else DEMO_TX.toCur=cur;
   render();
 }
-function setAmountMode(mode){amountMode=mode;if(!DEMO_TX){const u=getActiveSender();DEMO_TX={amount:500,fromCur:u.baseCur||"AED",toCur:"NGN",status:"pending",amountMode:mode,receiveAmount:null,scheduled:false,pricingCollapsed:true}}else{const rate=getRate(DEMO_TX.fromCur,DEMO_TX.toCur);if(mode==='receive'&&!DEMO_TX.receiveAmount){DEMO_TX.receiveAmount=Math.round(DEMO_TX.amount*rate)}else if(mode==='send'&&DEMO_TX.receiveAmount){DEMO_TX.amount=Math.round(DEMO_TX.receiveAmount/rate)}DEMO_TX.amountMode=mode}render()}
-function updateFromCurrency(cur){const u=getActiveSender();if(!DEMO_TX)DEMO_TX={amount:500,fromCur:cur,toCur:"NGN",status:"pending"};else DEMO_TX.fromCur=cur;render()}
-function updateSendAmountInput(val){const num=parseFloat(val)||0;const u=getActiveSender(),lim=getLimit(u.tier);if(!DEMO_TX){DEMO_TX={amount:num,fromCur:u.baseCur||"AED",toCur:"NGN",status:"pending",amountMode:"send"}}else{DEMO_TX.amount=num}if(DEMO_TX.amount<0)DEMO_TX.amount=0;if(DEMO_TX.amount>lim.perTx)DEMO_TX.amount=lim.perTx;render()}
-function updateReceiveAmountInput(val){const num=parseFloat(val)||0;if(!DEMO_TX)return;DEMO_TX.receiveAmount=num;const rate=getRate(DEMO_TX.fromCur,DEMO_TX.toCur);if(rate>0){DEMO_TX.amount=Math.round(num/rate)}render()}
-function togglePricingBreakdown(){pricingCollapsed=!pricingCollapsed;render()}
-function toggleRecipientSection(){recipientCollapsed=!recipientCollapsed;render()}
 function selectRecipient(id){
   const r=RECIPIENTS.find(x=>x.id===id);
   if(r){
@@ -1481,120 +1216,8 @@ function pushStatusNotifications(oldStatus,newStatus,txId){
   }
 }
 
-// ============ ACTIVE TRANSACTION HELPER ============
-function getActiveTx(){
-  if(ACTIVE_TX_ID){
-    const found=txHistory.find(t=>t.id===ACTIVE_TX_ID);
-    if(found)return found;
-  }
-  return DEMO_TX;
-}
-
-// ============ LP REQUEST & QUOTE FUNCTIONS ============
-function createLPRequest(txData){
-  const request={
-    id:'REQ-'+Math.random().toString(36).substr(2,6).toUpperCase(),
-    txId:txData.id,
-    amount:txData.amount,
-    fromCur:txData.fromCur,
-    toCur:txData.toCur,
-    corridor:txData.fromCur+'-'+txData.toCur,
-    sender:txData.sender,
-    status:'pending',
-    createdAt:new Date(),
-    quotes:[]
-  };
-  LP_REQUESTS.unshift(request);
-  pushNotif('📤 Quote request sent to LPs','info','sender');
-  pushNotif('📥 New quote request: '+request.corridor+' $'+fmt(request.amount,0),'info','lp');
-  return request;
-}
-
-function submitLPQuote(reqId){
-  const rate=parseFloat(document.getElementById('quoteRate')?.value);
-  const liquidity=parseFloat(document.getElementById('quoteLiquidity')?.value);
-  const settlement=document.getElementById('quoteSettlement')?.value;
-  
-  if(!rate||rate<=0){showToast('Please enter a valid rate','error');return}
-  if(!liquidity||liquidity<=0){showToast('Please enter liquidity amount','error');return}
-  
-  const request=LP_REQUESTS.find(r=>r.id===reqId);
-  if(!request){showToast('Request not found','error');return}
-  
-  // ENFORCE PRICING LIMITS
-  const corridor=request.corridor;
-  const band=PRICING_BANDS[corridor]||PRICING_BANDS.default;
-  const baseRate=request.baseRate;
-  const minRate=baseRate*(1+band.minDeltaPct/100);
-  const maxRate=baseRate*(1+band.maxDeltaPct/100);
-  
-  if(rate<minRate||rate>maxRate){
-    showToast('Rate outside allowed range ('+fmt(minRate,2)+' to '+fmt(maxRate,2)+')','error');
-    return;
-  }
-  
-  const lpProfile=LP_PROFILES[activeLPId];
-  
-  // Create quote matching SWIPE card format
-  const quote={
-    id:request.corridor+'_'+activeLPId+'_'+Date.now(),
-    requestId:reqId,
-    lpId:activeLPId,
-    lpName:lpProfile.name,
-    lpProfileId:activeLPId,
-    corridor:request.corridor,
-    from:request.fromCur,
-    to:request.toCur,
-    name:lpProfile.name.split(' ')[0]+' '+(lpProfile.name.split(' ')[1]||'').charAt(0)+'.',
-    flag:lpProfile.avatar,
-    city:lpProfile.homeCountry,
-    proximity:'Partner LP',
-    lpType:lpProfile.region+' Provider',
-    reliability:85+Math.floor(Math.random()*10),
-    settlement:settlement==='instant'?'2 min':settlement==='fast'?'15 min':'60 min',
-    lpRate:rate,
-    fbRate:request.baseRate,
-    rateDeltaPct:((rate/request.baseRate-1)*100),
-    score:75+Math.floor(Math.random()*15),
-    avatar:['#3b82f6','#a855f7','#14b8a6','#f59e0b'][Math.floor(Math.random()*4)],
-    badgeHint:'Live quote',
-    amount:request.amount,
-    liquidity:liquidity,
-    createdAt:new Date()
-  };
-  
-  LP_QUOTES.push(quote);
-  request.quotes.push(quote.id);
-  request.status='quoted';
-  
-  // Check if we have enough quotes (e.g., 2+) to show sender
-  const quotesForRequest=LP_QUOTES.filter(q=>q.requestId===reqId);
-  if(quotesForRequest.length>=2){
-    // Notify sender that quotes are ready
-    pushNotif('✅ '+quotesForRequest.length+' quotes received! View in FlowSwipe','success','sender');
-    
-    // Update transaction status if it exists
-    if(DEMO_TX&&DEMO_TX.id===request.txId){
-      DEMO_TX.status='quotes_ready';
-      DEMO_TX.availableQuotes=quotesForRequest.length;
-    }
-  }
-  
-  forceCloseModal();
-  showToast('✅ Quote submitted successfully','success');
-  pushNotif('💰 Quote received for '+request.corridor,'success','sender');
-  pushNotif('📊 Your quote was submitted for '+reqId,'success','lp');
-  render();
-}
-
 function submitSend(amt,from,to){
   const u=getActiveSender(),lim=getLimit(u.tier);
-  
-  // VALIDATION: Check if amount is valid
-  if(!amt||amt<=0){
-    showToast('❌ Please enter a valid amount','error');
-    return;
-  }
   
   // BUG-10 FIX: Validate currency matches user's base currency
   if(from!==u.baseCur){
@@ -1613,13 +1236,12 @@ function submitSend(amt,from,to){
   if(amtUSD+monthlyUsedUSD>lim.monthly){showToast('Would exceed monthly limit of '+fmtCur(lim.monthly,'USD'),'error');return}
   // Check if user is flagged
   if(u.flagged){showToast('Account flagged for review - transfers temporarily restricted','error');return}
-  
-  // NEW MULTI-TX FLOW: Create transaction and add to history immediately
-  const newTx={
+  // Create transaction
+  DEMO_TX={
     id:'TX-'+Math.random().toString(36).substr(2,6).toUpperCase(),
     amount:amt,fromCur:from,toCur:to,
     recipient:DEMO_TX?.recipient||RECIPIENTS[0],
-    status:'awaiting_lp_quotes',
+    status:'pending',
     scheduled:DEMO_TX?.scheduled||false,
     needByType:DEMO_TX?.scheduled?'scheduled':'immediate',
     scheduledTime:DEMO_TX?.scheduledTime,
@@ -1627,140 +1249,35 @@ function submitSend(amt,from,to){
     timestamp:new Date(),
     sender:u.id
   };
-  
-  // Add to history immediately (non-blocking)
-  txHistory.unshift(newTx);
-  
-  // Update usage
   u.dailyUsed+=amt;
   u.monthlyUsed=(u.monthlyUsed||0)+amt;
-  
-  // Create LP request
-  const baseRate=getRate(from,to);
-  const request={
-    id:'REQ-'+Math.random().toString(36).substr(2,6).toUpperCase(),
-    txId:newTx.id,
-    amount:amt,
-    fromCur:from,
-    toCur:to,
-    corridor:from+'-'+to,
-    sender:u.id,
-    baseRate:baseRate,
-    status:'pending',
-    createdAt:new Date(),
-    quotes:[]
-  };
-  LP_REQUESTS.unshift(request);
-  
-  // Keep DEMO_TX as the active transaction so FlowSwipe can access it
-  DEMO_TX=newTx;
-  
-  // FIX 2: Reset swipeIndex when creating new transaction
-  swipeIndex=0;
-  
-  pushNotif('📤 Transfer '+newTx.id+' submitted - finding best match...','success','sender');
-  pushNotif('📥 New quote request: '+from+'→'+to+' '+fmtCur(amt,from),'info','lp');
-  showToast('✅ Transfer submitted! You can create another.','success');
-  
-  // Redirect to dashboard to see active transfers
-  currentView='dashboard';
-  render();
+  pushNotif('📤 Transfer initiated: '+fmtCur(amt,from)+' → '+to,'info','sender');
+  setView('swipe');
   if(guidedMode&&guidedStep===0&&!freeMode)advanceGuidedStep();
 }
 
-function swipePass(){
-  // FIX 1: Use getActiveTx() for consistency
-  const tx=getActiveTx();
-  if(!tx){
-    showToast('No active transaction','warning');
-    return;
-  }
-
-  // Get the current filtered swipe list
-  let filteredSwipe=SWIPE;
-  let usingLiveQuotes=false;
-
-  if(tx.id){
-    const liveQuotes=LP_QUOTES.filter(q=>q.requestId&&LP_REQUESTS.find(r=>r.id===q.requestId&&r.txId===tx.id));
-    if(liveQuotes.length>0){
-      filteredSwipe=liveQuotes;
-      usingLiveQuotes=true;
-    }
-  }
-
-  if(!usingLiveQuotes&&tx.fromCur&&tx.toCur){
-    const targetCorridor=tx.fromCur+'-'+tx.toCur;
-    filteredSwipe=SWIPE.filter(card=>card.corridor===targetCorridor);
-    if(filteredSwipe.length===0){
-      filteredSwipe=SWIPE.filter(card=>card.to===tx.toCur);
-    }
-  }
-
-  swipeIndex++;
-  
-  // FIX 2: Clamp swipeIndex to prevent overflow
-  if(swipeIndex>=filteredSwipe.length){
-    swipeIndex=filteredSwipe.length; // Clamp at max
-    pushNotif('No more quotes available','info','sender');
-  }else{
-    pushNotif('Passed on match opportunity','info','sender');
-  }
-  render();
-}
+function swipePass(){swipeIndex++;pushNotif('Passed on match opportunity','info','sender');render()}
 
 function swipeMatch(){
-  // FIX 4: Properly accept LP quote and update transaction status
-  let filteredSwipe=SWIPE;
-  let usingLiveQuotes=false;
-  let activeTxId=ACTIVE_TX_ID||DEMO_TX?.id;
-
-  if(activeTxId){
-    const liveQuotes=LP_QUOTES.filter(q=>q.requestId&&LP_REQUESTS.find(r=>r.id===q.requestId&&r.txId===activeTxId));
-    if(liveQuotes.length>0){
-      filteredSwipe=liveQuotes;
-      usingLiveQuotes=true;
-    }
-  }
-
-  if(!usingLiveQuotes&&DEMO_TX&&DEMO_TX.fromCur&&DEMO_TX.toCur){
-    const targetCorridor=DEMO_TX.fromCur+'-'+DEMO_TX.toCur;
-    filteredSwipe=SWIPE.filter(card=>card.corridor===targetCorridor);
-    if(filteredSwipe.length===0){
-      filteredSwipe=SWIPE.filter(card=>card.to===DEMO_TX.toCur);
-    }
-  }
-
-  const card=filteredSwipe[swipeIndex];
-  if(!card||!DEMO_TX)return;
-  
-  // PROPERLY ACCEPT THE QUOTE
+  const card=SWIPE[swipeIndex];if(!card||!DEMO_TX)return;
+  // FIXED: Ensure match ALWAYS updates status
   DEMO_TX.status='matched';
   DEMO_TX.matchedWith=card;
-  DEMO_TX.matchedLpId=card.lpId||card.lpProfileId;
-  DEMO_TX.appliedRate=card.lpRate||card.fbRate;
-  DEMO_TX.matchedQuoteId=card.id;
   DEMO_TX.matchTime=new Date();
-  
-  // Update the LP request if using live quotes
-  if(usingLiveQuotes){
-    const request=LP_REQUESTS.find(r=>r.txId===activeTxId);
-    if(request){
-      request.status='matched';
-      request.selectedQuoteId=card.id;
-    }
-  }
-  
   swipeIndex++;
   
-  // Send notifications to ALL roles
-  pushNotif('🎉 Matched with '+card.name+'! Rate: '+fmt(DEMO_TX.appliedRate,2),'success','sender');
+  // FIXED: Send notifications to ALL roles
+  pushNotif('🎉 Matched with '+card.name+'!','success','sender');
   pushNotif('📥 New order from '+getActiveSender().name,'info','lp');
-  pushNotif('📋 Match detected: '+DEMO_TX.id+' → LP','info','admin');
+  pushNotif('📋 New match detected','info','admin');
   
+  // FIXED: Show modal and ensure it transitions
   showMatchSummaryModal(card);
   
+  // FIXED: Advance guided demo
   if(guidedMode&&guidedStep===1&&!freeMode)advanceGuidedStep();
   
+  // FIXED: Force render to update all views
   render();
 }
 
@@ -1952,9 +1469,7 @@ else if(currentRole==='lp'){
   // BUG FIX 2: Use active LP profile instead of hardcoded
   const lpProfile=LP_PROFILES[activeLPId]||LP_PROFILES.kwame;
   user={name:lpProfile.name,avatar:lpProfile.avatar,tier:'provider',color:'#3fb950',premium:false};
-// FIX 2: Add pending requests badge
-const pendingCount=LP_REQUESTS.filter(r=>r.status==='pending').length;
-  nav='<div class="nav-section">Operations</div><button class="nav-btn'+(currentView==='dashboard'?' active':'')+'" onclick="setView(\'dashboard\')"><span class="nav-btn-icon">📊</span>Dashboard</button><button class="nav-btn'+(currentView==='orders'?' active':'')+'" onclick="setView(\'orders\')"><span class="nav-btn-icon">📋</span>Order Book'+(pendingCount?'<span class="nav-btn-badge">'+pendingCount+'</span>':DEMO_TX&&DEMO_TX.status==='matched'?'<span class="nav-btn-badge">1</span>':'')+'</button><button class="nav-btn'+(currentView==='positions'?' active':'')+'" onclick="setView(\'positions\')"><span class="nav-btn-icon">💰</span>Positions</button><button class="nav-btn'+(currentView==='pricing'?' active':'')+'" onclick="setView(\'pricing\')"><span class="nav-btn-icon">💲</span>Corridor Pricing</button><button class="nav-btn'+(currentView==='profile'?' active':'')+'" onclick="setView(\'profile\')"><span class="nav-btn-icon">🏢</span>Profile</button>';
+  nav='<div class="nav-section">Operations</div><button class="nav-btn'+(currentView==='dashboard'?' active':'')+'" onclick="setView(\'dashboard\')"><span class="nav-btn-icon">📊</span>Dashboard</button><button class="nav-btn'+(currentView==='orders'?' active':'')+'" onclick="setView(\'orders\')"><span class="nav-btn-icon">📋</span>Order Book'+(DEMO_TX&&DEMO_TX.status==='matched'?'<span class="nav-btn-badge">1</span>':'')+'</button><button class="nav-btn'+(currentView==='positions'?' active':'')+'" onclick="setView(\'positions\')"><span class="nav-btn-icon">💰</span>Positions</button><button class="nav-btn'+(currentView==='pricing'?' active':'')+'" onclick="setView(\'pricing\')"><span class="nav-btn-icon">💲</span>Corridor Pricing</button><button class="nav-btn'+(currentView==='profile'?' active':'')+'" onclick="setView(\'profile\')"><span class="nav-btn-icon">🏢</span>Profile</button>';
 }
 else if(currentRole==='anchor'){
   // BUG FIX 2: Use active Anchor profile instead of hardcoded
@@ -2034,36 +1549,14 @@ const hl=guidedMode&&guidedStep===0&&!freeMode?' guided-highlight':'';
 // User selector
 const userSelector='<div class="user-selector">'+Object.entries(USERS).map(([k,usr])=>'<div class="user-pill'+(k===activeSenderId?' active':'')+'" onclick="switchSenderUser(\''+k+'\')"><span class="avatar">'+usr.avatar+'</span><span>'+usr.name.split(' ')[0]+'</span><span class="badge badge-'+usr.tier+'" style="padding:2px 6px;font-size:8px">'+usr.tier.charAt(0).toUpperCase()+'</span></div>').join('')+'</div>';
 
-// FEATURE: Show pending LP quote requests
-const myRequests=LP_REQUESTS.filter(r=>r.sender===u.id&&r.status==='pending');
-const myQuoted=LP_REQUESTS.filter(r=>r.sender===u.id&&r.status==='quoted');
-const pendingSection=(myRequests.length||myQuoted.length)?'<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-title">📋 Your Active Transfers</div></div>'+myQuoted.map(req=>{const quotes=LP_QUOTES.filter(q=>q.requestId===req.id);return'<div class="tx-row" style="border-color:var(--green);background:rgba(63,185,80,0.05)" onclick="ACTIVE_TX_ID=\''+req.txId+'\';setView(\'swipe\');showToast(\'Viewing '+quotes.length+' quotes for '+req.corridor+'\',\'info\')"><div class="tx-icon" style="background:rgba(63,185,80,0.15)">✅</div><div class="tx-info"><div class="tx-title">'+req.id+' <span class="badge badge-success">'+quotes.length+' quotes ready</span></div><div class="tx-detail">'+req.corridor+' • '+fmtCur(req.amount,req.fromCur)+'</div></div><div class="tx-amount"><button class="btn btn-sm btn-success" onclick="event.stopPropagation();ACTIVE_TX_ID=\''+req.txId+'\';setView(\'swipe\')">View Quotes</button></div></div>'}).join('')+myRequests.map(req=>'<div class="tx-row"><div class="tx-icon" style="background:rgba(88,166,255,0.1)">⏳</div><div class="tx-info"><div class="tx-title">'+req.id+' <span class="badge badge-warning">Awaiting quotes</span></div><div class="tx-detail">'+req.corridor+' • '+fmtCur(req.amount,req.fromCur)+'</div></div></div>').join('')+'</div>':'';
-
-return userSelector+pendingSection+'<div class="score-section'+hl+'"><div class="score-ring"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="54"/><circle class="progress" cx="60" cy="60" r="54" style="stroke-dashoffset:'+offset+'"/></svg><div class="score-inner"><div class="score-num">'+u.score+'</div><div class="score-lbl">FlowScore</div></div></div><div class="score-info"><div class="score-title">'+u.tier.charAt(0).toUpperCase()+u.tier.slice(1)+' Member</div><div class="score-sub">Per TX: '+fmtCur(lim.perTx,'USD')+' • Daily: '+fmtCur(lim.daily,'USD')+' • Used: '+fmtCur(u.dailyUsed,'USD')+'</div><div class="score-actions"><button class="btn btn-primary" onclick="setView(\'send\')">💸 Send Money</button><button class="btn btn-secondary" onclick="setView(\'swipe\')">🔄 FlowSwipe</button></div><div class="score-controls"><button class="score-ctrl-btn" onclick="simulateScoreChange(-10)">📉 Lower Score</button><button class="score-ctrl-btn" onclick="simulateScoreChange(10)">📈 Raise Score</button><button class="score-ctrl-btn" onclick="const u=getActiveSender();u.premium=!u.premium;render();showToast(u.premium?\'Premium enabled\':\'Premium disabled\')">⭐ Toggle Premium</button></div><div class="tier-bar"><div class="tier-item'+(u.tier==='bronze'?' active':'')+'"><div class="tier-name">Bronze</div><div class="tier-limit">$'+fmt(TIER_LIMITS.bronze.perTx,0)+'/tx</div></div><div class="tier-item'+(u.tier==='silver'?' active':'')+'"><div class="tier-name">Silver</div><div class="tier-limit">$'+fmt(TIER_LIMITS.silver.perTx,0)+'/tx</div></div><div class="tier-item'+(u.tier==='gold'?' active':'')+'"><div class="tier-name">Gold</div><div class="tier-limit">$'+fmt(TIER_LIMITS.gold.perTx,0)+'/tx</div></div><div class="tier-item'+(u.tier==='platinum'?' active':'')+'"><div class="tier-name">Platinum</div><div class="tier-limit">$'+fmt(TIER_LIMITS.platinum.perTx,0)+'/tx</div></div></div></div></div>'+renderSenderTimeline();
+return userSelector+'<div class="score-section'+hl+'"><div class="score-ring"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="54"/><circle class="progress" cx="60" cy="60" r="54" style="stroke-dashoffset:'+offset+'"/></svg><div class="score-inner"><div class="score-num">'+u.score+'</div><div class="score-lbl">FlowScore</div></div></div><div class="score-info"><div class="score-title">'+u.tier.charAt(0).toUpperCase()+u.tier.slice(1)+' Member</div><div class="score-sub">Per TX: '+fmtCur(lim.perTx,'USD')+' • Daily: '+fmtCur(lim.daily,'USD')+' • Used: '+fmtCur(u.dailyUsed,'USD')+'</div><div class="score-actions"><button class="btn btn-primary" onclick="setView(\'send\')">💸 Send Money</button><button class="btn btn-secondary" onclick="setView(\'swipe\')">🔄 FlowSwipe</button></div><div class="score-controls"><button class="score-ctrl-btn" onclick="simulateScoreChange(-10)">📉 Lower Score</button><button class="score-ctrl-btn" onclick="simulateScoreChange(10)">📈 Raise Score</button><button class="score-ctrl-btn" onclick="const u=getActiveSender();u.premium=!u.premium;render();showToast(u.premium?\'Premium enabled\':\'Premium disabled\')">⭐ Toggle Premium</button></div><div class="tier-bar"><div class="tier-item'+(u.tier==='bronze'?' active':'')+'"><div class="tier-name">Bronze</div><div class="tier-limit">$'+fmt(TIER_LIMITS.bronze.perTx,0)+'/tx</div></div><div class="tier-item'+(u.tier==='silver'?' active':'')+'"><div class="tier-name">Silver</div><div class="tier-limit">$'+fmt(TIER_LIMITS.silver.perTx,0)+'/tx</div></div><div class="tier-item'+(u.tier==='gold'?' active':'')+'"><div class="tier-name">Gold</div><div class="tier-limit">$'+fmt(TIER_LIMITS.gold.perTx,0)+'/tx</div></div><div class="tier-item'+(u.tier==='platinum'?' active':'')+'"><div class="tier-name">Platinum</div><div class="tier-limit">$'+fmt(TIER_LIMITS.platinum.perTx,0)+'/tx</div></div></div></div></div>'+renderSenderTimeline();
 }
 
 function renderSenderTimeline(){
-  // Show most recent active transaction from history
-  const u=getActiveSender();
-  const myTxs=txHistory.filter(t=>t.sender===u.id&&t.status!=='completed');
-  
-  if(!myTxs.length)return'<div class="card"><div class="card-header"><div class="card-title">📍 Recent Activity</div></div><div class="empty-state"><div class="empty-icon">💸</div><div class="empty-title">No active transfers</div><div class="empty-text">Start a new transfer or try FlowSwipe</div></div></div>';
-  
-  const tx=myTxs[0]; // Show most recent
-  
-  // Unified status steps matching the workflow
-  const steps=[
-    {label:'Transfer Created',status:'awaiting_lp_quotes',done:true,time:tx.timestamp?.toLocaleTimeString()},
-    {label:'LP Quotes Received',status:'quotes_ready',done:['quotes_ready','lp_selected','matched','lp_funded','payout_in_progress','payout_processing','completed'].includes(tx.status)},
-    {label:'LP Selected',status:'lp_selected',done:['lp_selected','matched','lp_funded','payout_in_progress','payout_processing','completed'].includes(tx.status)},
-    {label:'LP Funded',status:'lp_funded',done:['lp_funded','payout_in_progress','payout_processing','completed'].includes(tx.status)},
-    {label:'Payout Processing',status:'payout_in_progress',done:['payout_in_progress','payout_processing','completed'].includes(tx.status)},
-    {label:'Transfer Complete',status:'completed',done:tx.status==='completed'}
-  ];
-  
-  const activeIdx=steps.findIndex(s=>!s.done);
-  
-  return'<div class="card"><div class="card-header"><div class="card-title">📍 Transfer: '+tx.id+'</div><span class="badge badge-info">'+tx.status.replace(/_/g,' ')+'</span>'+(tx.scheduled?'<span class="badge badge-scheduled">Scheduled</span>':'')+'</div><div class="timeline">'+steps.map((s,i)=>'<div class="timeline-item"><div class="timeline-dot '+(s.done?'complete':i===activeIdx?'active':'pending')+'">'+(s.done?'✓':i+1)+'</div><div class="timeline-content"><div class="timeline-title">'+s.label+'</div>'+(s.time?'<div class="timeline-time">'+s.time+'</div>':'')+'</div></div>').join('')+'</div><div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap"><div class="info-link" onclick="showSettlementModal()">ℹ️ How settlement works</div>'+(tx.status!=='completed'?'<div class="info-link" onclick="showIssueModal(\'sender\')" style="color:var(--yellow)">🚩 Flag Issue</div>':'')+'</div></div>';
+if(!DEMO_TX)return'<div class="card"><div class="card-header"><div class="card-title">📍 Recent Activity</div></div><div class="empty-state"><div class="empty-icon">💸</div><div class="empty-title">No active transfers</div><div class="empty-text">Start a new transfer or try FlowSwipe</div></div></div>';
+const tx=DEMO_TX,steps=[{label:'Order Created',done:true,time:tx.timestamp?.toLocaleTimeString()},{label:'Match Found',done:['matched','lp_funded','payout_processing','completed'].includes(tx.status)},{label:'LP Funded',done:['lp_funded','payout_processing','completed'].includes(tx.status)},{label:'Payout Processing',done:['payout_processing','completed'].includes(tx.status)},{label:'Complete',done:tx.status==='completed'}];
+const activeIdx=steps.findIndex(s=>!s.done);
+return'<div class="card"><div class="card-header"><div class="card-title">📍 Transfer: '+tx.id+'</div><span class="badge badge-info">'+tx.status.replace(/_/g,' ')+'</span>'+(tx.scheduled?'<span class="badge badge-scheduled">Scheduled</span>':'')+'</div><div class="timeline">'+steps.map((s,i)=>'<div class="timeline-item"><div class="timeline-dot '+(s.done?'complete':i===activeIdx?'active':'pending')+'">'+(s.done?'✓':i+1)+'</div><div class="timeline-content"><div class="timeline-title">'+s.label+'</div>'+(s.time?'<div class="timeline-time">'+s.time+'</div>':'')+'</div></div>').join('')+'</div><div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap"><div class="info-link" onclick="showSettlementModal()">ℹ️ How settlement works</div><div class="info-link" onclick="showSettlementTraceModal()">🔍 View settlement trace</div>'+(tx.status!=='completed'?'<div class="info-link" onclick="showIssueModal(\'sender\')" style="color:var(--yellow)">🚩 Flag Issue</div>':'')+'</div></div>';
 }
 
 function renderSendMoney(){
@@ -2095,107 +1588,28 @@ const scheduleInput=DEMO_TX?.scheduled?'<div class="form-group"><label class="fo
 // FIX 3: Add "+ Invite New" button
 const inviteBtn='<button class="btn btn-sm btn-secondary" onclick="showInviteRecipientModal()" style="width:100%;margin-top:8px">+ Invite New Recipient</button>';
 
-// Change #2: Collapsed Recipient Selection
-const selectedRecipient=DEMO_TX?.recipient||null;
-const recipientHeader='<div style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg3);border-radius:8px;margin-bottom:'+(recipientCollapsed?'16px':'8px')+'" onclick="toggleRecipientSection()"><div style="display:flex;align-items:center;gap:10px">'+(selectedRecipient?'<span style="font-size:20px">'+selectedRecipient.flag+'</span><div><div style="font-weight:600;font-size:13px">'+selectedRecipient.name+'</div><div style="font-size:11px;color:var(--text2)">'+selectedRecipient.method+' • '+selectedRecipient.account+'</div></div>':'<span>👤 Select Recipient</span>')+'</div><span>'+(recipientCollapsed?'▼':'▲')+'</span></div>';
-const recipientList=recipientCollapsed?'':RECIPIENTS.slice(0,4).map(r=>'<div class="recipient-card'+(DEMO_TX?.recipient?.id===r.id?' selected':'')+'" onclick="selectRecipient(\''+r.id+'\');recipientCollapsed=true;render()"><div class="recipient-avatar" style="background:var(--bg4)">'+r.flag+'</div><div class="recipient-info"><div class="recipient-name">'+r.name+(r.pending?' <span class="badge badge-warning" style="font-size:9px">Pending</span>':'')+'</div><div class="recipient-detail">'+r.method+' • '+r.account+'</div></div></div>').join('')+(recipientCollapsed?'':inviteBtn);
-
 // FIX 5: Add peer-LP toggle
-
-// UI Enhancements
-const mode=DEMO_TX?.amountMode||amountMode||'send';
-const modeToggle='<div class="form-group"><label class="form-label">Amount Mode</label><div class="grid-2"><label class="schedule-option'+(mode==='send'?' active':'')+'"><input type="radio" name="amountMode" '+(mode==='send'?'checked':'')+' onclick="setAmountMode(\'send\')"><span>📤 I want to SEND</span></label><label class="schedule-option'+(mode==='receive'?' active':'')+'"><input type="radio" name="amountMode" onclick="setAmountMode(\'receive\')"><span>📥 Receiver gets</span></label></div></div>';
-
-// Mode-specific amounts and labels
-const primaryAmount=mode==='send'?amt:Math.round(recv);
-const primaryCur=mode==='send'?fromCur:toCur;
-const secondaryAmount=mode==='send'?recv:amt;
-const secondaryCur=mode==='send'?toCur:fromCur;
-const primaryLabel=mode==='send'?'YOU SEND ('+fromCur+')':'RECEIVER GETS ('+toCur+')';
-const secondaryLabel=mode==='send'?toCur+' received':'You need to send';
-
-// Get currency metadata for inline pill
-const primaryCurMeta=CURRENCY_META[primaryCur]||{flag:'🌍',symbol:'$'};
-const secondaryCurMeta=CURRENCY_META[secondaryCur]||{flag:'🌍',symbol:'$'};
-
-// Unified amount field with inline currency pill
-const unifiedAmountField=mode==='send'?'<div style="position:relative"><input type="number" class="form-input" value="'+amt+'" min="100" max="'+lim.perTx+'" step="50" onchange="updateSendAmountInput(this.value)" style="font-size:40px;font-weight:700;text-align:center;padding:20px 120px 20px 20px;background:var(--bg3);border-radius:14px;margin-bottom:8px;font-family:inherit" placeholder="0"><div style="position:absolute;right:20px;top:50%;transform:translateY(-50%);background:var(--bg4);border:1px solid var(--border);border-radius:20px;padding:8px 16px;display:flex;align-items:center;gap:8px;font-size:18px;font-weight:600"><span>'+primaryCurMeta.flag+'</span><span>'+primaryCur+'</span></div></div>':'<div style="position:relative"><input type="number" class="form-input" value="'+Math.round(recv)+'" min="0" step="100" onchange="updateReceiveAmountInput(this.value)" style="font-size:40px;font-weight:700;text-align:center;padding:20px 120px 20px 20px;background:var(--bg3);border-radius:14px;margin-bottom:8px;font-family:inherit" placeholder="0"><div style="position:absolute;right:20px;top:50%;transform:translateY(-50%);background:var(--bg4);border:1px solid var(--border);border-radius:20px;padding:8px 16px;display:flex;align-items:center;gap:8px;font-size:18px;font-weight:600"><span>'+primaryCurMeta.flag+'</span><span>'+primaryCur+'</span></div></div>';
-const currencyLabel='<div style="text-align:center;font-size:11px;color:var(--text2);margin-top:-4px;margin-bottom:16px">'+primaryCur+' • '+(CURRENCIES[primaryCur]?.name||'Currency')+'</div>';
-
-const fromCurSelector='<div class="form-group"><label class="form-label">From Currency</label><select class="form-select" onchange="updateFromCurrency(this.value)"><option value="AED"'+(fromCur==='AED'?' selected':'')+ '>🇦🇪 UAE Dirham (AED)</option><option value="USD"'+(fromCur==='USD'?' selected':'')+'>🇺🇸 US Dollar (USD)</option><option value="GBP"'+(fromCur==='GBP'?' selected':'')+'>🇬🇧 British Pound (GBP)</option><option value="EUR"'+(fromCur==='EUR'?' selected':'')+'>🇪🇺 Euro (EUR)</option></select></div>';
-
-
-const pricingHeader='<div style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg3);border-radius:8px;margin-top:12px" onclick="togglePricingBreakdown()"><span style="font-weight:600">💰 Total Fees: $'+fmt(pricing.totalFee,2)+' ('+fmt(pricing.effCostPct,2)+'%)</span><span>'+(pricingCollapsed?'▼':'▲')+'</span></div>';
-const pricingDetails=pricingCollapsed?'':'<div class="glass-card" style="padding:12px;margin-top:4px"><div class="revenue-breakdown"><div class="revenue-row"><span class="label">LP Fee</span><span class="value">$'+fmt(pricing.lpFee,2)+'</span></div><div class="revenue-row"><span class="label">Anchor Fee</span><span class="value">$'+fmt(pricing.anchorFee,2)+'</span></div><div class="revenue-row"><span class="label">FlowBridge Margin</span><span class="value">$'+fmt(pricing.fbMargin,2)+'</span></div></div><div style="font-size:10px;color:var(--green);margin-top:8px">✓ Still 5-10x cheaper than Western Union</div></div>';
-
 const peerLPSection='<div class="glass-card" style="margin-top:12px;padding:12px"><div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-weight:600;font-size:12px">Peer Liquidity Provider</div><div style="font-size:10px;color:var(--text2)">Provide liquidity in your corridors</div></div><label style="cursor:pointer"><input type="checkbox" '+(u.canProvideLiquidity?'checked':'')+' onchange="toggleUserAsLP()" style="width:auto;cursor:pointer"></label></div>'+(u.canProvideLiquidity?'<div style="font-size:10px;color:var(--green);margin-top:6px">✓ Active in: '+(u.lpCorridors||[]).join(', ')+'</div>':'')+'</div>';
 
-// NEW: Show "Finding best match..." state if awaiting quotes
-const buttonText=DEMO_TX&&DEMO_TX.status==='awaiting_lp_quotes'?'🔍 Finding best match...':'🔎 Find best match';
-const buttonDisabled=overLimit||overDaily||(DEMO_TX&&DEMO_TX.status==='awaiting_lp_quotes');
-
-return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">💸 Send Money</div><span style="font-size:11px;color:var(--text2)">Sending as '+u.name+'</span></div><div class="send-form">'+modeToggle+fromCurSelector+'<div class="form-group"><label class="form-label">'+primaryLabel+'</label>'+unifiedAmountField+currencyLabel+'<input type="range" min="100" max="'+lim.perTx+'" step="50" value="'+amt+'" style="width:100%" onchange="updateSendAmount(this.value)">'+limitMsg+trustMsg+'</div><div class="form-group"><label class="form-label">To Country</label><select class="form-select" onchange="updateToCurrency(this.value)"><option value="NGN"'+(toCur==='NGN'?' selected':'')+'>🇳🇬 Nigeria (NGN)</option><option value="GHS"'+(toCur==='GHS'?' selected':'')+'>🇬🇭 Ghana (GHS)</option><option value="INR"'+(toCur==='INR'?' selected':'')+'>🇮🇳 India (INR)</option><option value="PHP"'+(toCur==='PHP'?' selected':'')+'>🇵🇭 Philippines (PHP)</option><option value="KES"'+(toCur==='KES'?' selected':'')+'>🇰🇪 Kenya (KES)</option><option value="ZWL"'+(toCur==='ZWL'?' selected':'')+'>🇿🇼 Zimbabwe (ZWL)</option><option value="MXN"'+(toCur==='MXN'?' selected':'')+'>🇲🇽 Mexico (MXN)</option></select></div><div class="rate-info"><span>Exchange Rate</span><span class="rate-value">1 '+fromCur+' = '+fmt(rate,2)+' '+toCur+'</span></div><div class="receive-amount"><span class="receive-flag">'+(CURRENCIES[secondaryCur]?.flag||'🌍')+'</span><div><div class="receive-value">'+fmt(secondaryAmount,2)+'</div><div class="receive-currency">'+secondaryLabel+'</div></div></div>'+pricingHeader+pricingDetails+'<div class="competitor-compare"><div class="title">Rate Comparison</div><div class="competitor-row best"><span class="name">⚡ FlowBridge</span><span class="rate">'+fmt(rate,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Wise</span><span class="rate">'+fmt(rate*0.988,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Western Union</span><span class="rate">'+fmt(rate*0.955,2)+' '+toCur+'</span></div><div class="competitor-row worst"><span class="name">Bank Wire</span><span class="rate">'+fmt(tradRate,2)+' '+toCur+'</span></div></div><div class="speed-compare"><div class="speed-item highlight"><div class="label">FlowBridge</div><div class="time">< 5 min</div></div><div class="speed-item"><div class="label">Traditional</div><div class="time">2-3 days</div></div></div>'+(savings>0?'<div class="savings-highlight"><div class="amount">+'+fmtCur(savings,toCur)+'</div><div class="label">You save vs bank wire</div></div>':'')+'<div class="form-group" style="margin-top:16px"><label class="form-label">Recipient</label>'+recipientHeader+recipientList+'</div><div class="form-group"><label class="form-label">Schedule</label><div class="grid-2"><label class="schedule-option'+((!DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" checked onclick="setSchedule(false)"><span>🚀 Send Now</span></label><label class="schedule-option'+((DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" onclick="setSchedule(true)"><span>⏰ Schedule</span></label></div></div>'+scheduleInput+peerLPSection+'<button class="btn btn-primary btn-lg" style="width:100%"'+(buttonDisabled?' disabled':'')+' onclick="submitSend('+amt+',\''+fromCur+'\',\''+toCur+'\')">'+buttonText+'</button></div></div>';
+return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">💸 Send Money</div><span style="font-size:11px;color:var(--text2)">Sending as '+u.name+'</span></div><div class="send-form"><div class="form-group"><label class="form-label">You Send</label><div class="amount-display"><span class="amount-value">'+fmt(amt,0)+'</span><span class="amount-currency">'+fromCur+'</span></div><input type="range" min="100" max="'+lim.perTx+'" step="50" value="'+amt+'" style="width:100%" onchange="updateSendAmount(this.value)">'+limitMsg+trustMsg+'</div><div class="form-group"><label class="form-label">To Country</label><select class="form-select" onchange="updateToCurrency(this.value)"><option value="NGN"'+(toCur==='NGN'?' selected':'')+'>🇳🇬 Nigeria (NGN)</option><option value="GHS"'+(toCur==='GHS'?' selected':'')+'>🇬🇭 Ghana (GHS)</option><option value="INR"'+(toCur==='INR'?' selected':'')+'>🇮🇳 India (INR)</option><option value="PHP"'+(toCur==='PHP'?' selected':'')+'>🇵🇭 Philippines (PHP)</option><option value="KES"'+(toCur==='KES'?' selected':'')+'>🇰🇪 Kenya (KES)</option><option value="ZWL"'+(toCur==='ZWL'?' selected':'')+'>🇿🇼 Zimbabwe (ZWL)</option><option value="MXN"'+(toCur==='MXN'?' selected':'')+'>🇲🇽 Mexico (MXN)</option></select></div><div class="rate-info"><span>Exchange Rate</span><span class="rate-value">1 '+fromCur+' = '+fmt(rate,2)+' '+toCur+'</span></div><div class="receive-amount"><span class="receive-flag">'+(CURRENCIES[toCur]?.flag||'🌍')+'</span><div><div class="receive-value">'+fmt(recv,2)+'</div><div class="receive-currency">'+toCur+' received</div></div></div>'+pricingBreakdown+'<div class="competitor-compare"><div class="title">Rate Comparison</div><div class="competitor-row best"><span class="name">⚡ FlowBridge</span><span class="rate">'+fmt(rate,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Wise</span><span class="rate">'+fmt(rate*0.988,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Western Union</span><span class="rate">'+fmt(rate*0.955,2)+' '+toCur+'</span></div><div class="competitor-row worst"><span class="name">Bank Wire</span><span class="rate">'+fmt(tradRate,2)+' '+toCur+'</span></div></div><div class="speed-compare"><div class="speed-item highlight"><div class="label">FlowBridge</div><div class="time">< 5 min</div></div><div class="speed-item"><div class="label">Traditional</div><div class="time">2-3 days</div></div></div>'+(savings>0?'<div class="savings-highlight"><div class="amount">+'+fmtCur(savings,toCur)+'</div><div class="label">You save vs bank wire</div></div>':'')+'<div class="form-group" style="margin-top:16px"><label class="form-label">Recipient</label>'+RECIPIENTS.slice(0,4).map(r=>'<div class="recipient-card'+(DEMO_TX?.recipient?.id===r.id?' selected':'')+'" onclick="selectRecipient(\''+r.id+'\')"><div class="recipient-avatar" style="background:var(--bg4)">'+r.flag+'</div><div class="recipient-info"><div class="recipient-name">'+r.name+(r.pending?' <span class="badge badge-warning" style="font-size:9px">Pending</span>':'')+'</div><div class="recipient-detail">'+r.method+' • '+r.account+'</div></div></div>').join('')+inviteBtn+'</div><div class="form-group"><label class="form-label">Schedule</label><div class="grid-2"><label class="schedule-option'+((!DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" checked onclick="setSchedule(false)"><span>🚀 Send Now</span></label><label class="schedule-option'+((DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" onclick="setSchedule(true)"><span>⏰ Schedule</span></label></div></div>'+scheduleInput+peerLPSection+'<button class="btn btn-primary btn-lg" style="width:100%"'+(overLimit||overDaily?' disabled':'')+' onclick="submitSend('+amt+',\''+fromCur+'\',\''+toCur+'\')">Continue to FlowSwipe →</button></div></div>';
 }
 
 function renderSwipeView(){
-// FIX 1: Use getActiveTx() for consistency
-const tx=getActiveTx();
-if(!tx)return'<div class="card"><div class="empty-state"><div class="empty-icon">💸</div><div class="empty-title">No active transaction</div><div class="empty-text">Create a transfer to see LP quotes</div></div></div>';
-
-// FEATURE: Use LP_QUOTES if available for active transaction, otherwise use default SWIPE
+// BUG FIX 4: Filter swipe cards by active corridor
 let filteredSwipe=SWIPE;
-let usingLiveQuotes=false;
-
-// Check if we have LP quotes for the current transaction
-if(tx.id){
-  const liveQuotes=LP_QUOTES.filter(q=>q.requestId&&LP_REQUESTS.find(r=>r.id===q.requestId&&r.txId===tx.id));
-  if(liveQuotes.length>0){
-    filteredSwipe=liveQuotes;
-    usingLiveQuotes=true;
-  }
-}
-
-// If no live quotes, filter by corridor from tx
-if(!usingLiveQuotes&&tx.fromCur&&tx.toCur){
-  const targetCorridor=tx.fromCur+'-'+tx.toCur;
-  filteredSwipe=SWIPE.filter(card=>card.corridor===targetCorridor);
+if(DEMO_TX&&DEMO_TX.fromCur&&DEMO_TX.toCur){
+  const targetCorridor=DEMO_TX.fromCur+'→'+DEMO_TX.toCur;
+  filteredSwipe=SWIPE.filter(card=>(card.from+'→'+card.to)===targetCorridor);
   if(filteredSwipe.length===0){
     // Fallback: show similar corridors (same toCur)
-    filteredSwipe=SWIPE.filter(card=>card.to===tx.toCur);
+    filteredSwipe=SWIPE.filter(card=>card.to===DEMO_TX.toCur);
   }
 }
-
-if(swipeIndex>=filteredSwipe.length)return'<div class="card"><div class="empty-state"><div class="empty-icon">✨</div><div class="empty-title">All caught up!</div><div class="empty-text">'+(usingLiveQuotes?'No more quotes available for this transaction':(DEMO_TX&&DEMO_TX.fromCur&&DEMO_TX.toCur?'No more matches for '+DEMO_TX.fromCur+' → '+DEMO_TX.toCur+' corridor':'Check back later for new matches'))+'</div><button class="btn btn-secondary" onclick="swipeIndex=0;render()">Reset Cards</button></div></div>';
+if(swipeIndex>=filteredSwipe.length)return'<div class="card"><div class="empty-state"><div class="empty-icon">✨</div><div class="empty-title">All caught up!</div><div class="empty-text">'+(DEMO_TX&&DEMO_TX.corridor?'No more matches for '+DEMO_TX.corridor+' corridor':'Check back later for new matches')+'</div><button class="btn btn-secondary" onclick="swipeIndex=0;render()">Reset Cards</button></div></div>';
 const cards=filteredSwipe.slice(swipeIndex,swipeIndex+3).reverse();
 const hl=guidedMode&&guidedStep===1&&!freeMode?' guided-highlight':'';
-const corridorMsg=DEMO_TX&&DEMO_TX.fromCur&&DEMO_TX.toCur?' <span class="badge badge-info" style="margin-left:8px">'+DEMO_TX.fromCur+' → '+DEMO_TX.toCur+'</span>':'';
-
-// Get FlowBridge benchmark rate for comparison
-const baseRate=DEMO_TX?getRate(DEMO_TX.fromCur,DEMO_TX.toCur):430;
-const sendAmount=DEMO_TX?DEMO_TX.amount:500;
-
-// Enhanced LP cards with rich metadata display
-return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">🔄 FlowSwipe'+corridorMsg+'</div><span class="badge badge-info">'+filteredSwipe.length+' matches</span></div><div class="swipe-container" id="swipeContainer">'+cards.map((card,i)=>{
-  const zIdx=cards.length-i,scale=1-i*0.03,yOff=i*8;
-  
-  // Compute LP-specific rate (from card data or calculate)
-  const lpRate=card.lpRate||(baseRate*(1+(card.rateDeltaPct||0)/100));
-  const receiveAmount=sendAmount*lpRate;
-  
-  // Calculate vs FlowBridge comparison
-  const deltaPct=baseRate>0?((lpRate/baseRate-1)*100):0;
-  const spreadColor=deltaPct>0?'var(--green)':deltaPct<0?'var(--red)':'var(--text2)';
-  const spreadSign=deltaPct>=0?'+':'';
-  
-  // Reliability badge color
-  const reliabilityPct=card.reliability||90;
-  const reliabilityColor=reliabilityPct>=90?'var(--green)':reliabilityPct>=80?'var(--accent)':'var(--yellow)';
-  
-  // Badge hint display
-  const badgeHtml=card.badgeHint?'<span class="badge badge-info" style="font-size:9px;margin-left:6px">'+card.badgeHint+'</span>':'';
-  
-  return'<div class="swipe-card" id="card-'+card.id+'" style="z-index:'+zIdx+';transform:scale('+scale+') translateY('+yOff+'px)" data-id="'+card.id+'"><div class="header"><div class="user-info"><div class="avatar" style="background:'+card.avatar+'">'+card.name.charAt(0)+'</div><div><div class="name">'+card.name+badgeHtml+'</div><div class="location">'+card.flag+' '+card.city+'</div></div></div><span class="badge badge-success">'+card.score+' score</span></div><div class="amount-section"><div style="font-size:12px;color:var(--text2);margin-bottom:8px">You send '+fmtCur(sendAmount,card.from||card.corridor.split('-')[0])+'</div><div class="amount" style="color:var(--green)">→ '+fmtAmount(receiveAmount)+' '+(card.to||card.corridor.split('-')[1])+'</div><div style="font-size:11px;color:var(--text2);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:4px"><span>'+card.from+' → '+card.to+'</span><span style="color:'+spreadColor+';font-weight:600">'+spreadSign+fmt(deltaPct,2)+'% vs FlowBridge</span></div></div><div class="details"><div class="detail-item"><div class="detail-label">LP Rate</div><div class="detail-value" style="font-family:JetBrains Mono;font-size:12px;color:var(--green)">'+fmt(lpRate,3)+' '+(card.to||card.corridor.split('-')[1])+' / '+(card.from||card.corridor.split('-')[0])+'</div></div><div class="detail-item"><div class="detail-label">'+card.lpType+'</div><div class="detail-value" style="font-size:10px">'+card.proximity+'</div></div><div class="detail-item"><div class="detail-label">Reliability</div><div class="detail-value" style="color:'+reliabilityColor+'">'+reliabilityPct+'%</div></div><div class="detail-item"><div class="detail-label">Settlement</div><div class="detail-value">'+card.settlement+'</div></div></div><div style="margin-top:12px;padding:10px;background:var(--bg4);border-radius:8px;font-size:11px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text2)">City:</span><span style="color:var(--text)">'+card.city+'</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Type:</span><span style="color:var(--text)">'+card.lpType+'</span></div></div></div>'
-}).join('')+'</div><div class="swipe-actions"><button class="swipe-btn pass" onclick="swipePass()">✕</button><button class="swipe-btn match" onclick="swipeMatch()">✓</button></div><div class="swipe-hint">← Swipe left to pass • Swipe right to match →</div></div>';
+const corridorMsg=DEMO_TX&&DEMO_TX.corridor?' <span class="badge badge-info" style="margin-left:8px">'+DEMO_TX.corridor+'</span>':'';
+return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">🔄 FlowSwipe'+corridorMsg+'</div><span class="badge badge-info">'+cards.length+' matches</span></div><div class="swipe-container" id="swipeContainer">'+cards.map((card,i)=>{const zIdx=cards.length-i,scale=1-i*0.03,yOff=i*8;const reliabilityColor=card.reliability==='Excellent'?'var(--green)':card.reliability==='High'?'var(--accent)':'var(--yellow)';return'<div class="swipe-card" id="card-'+card.id+'" style="z-index:'+zIdx+';transform:scale('+scale+') translateY('+yOff+'px)" data-id="'+card.id+'"><div class="header"><div class="user-info"><div class="avatar" style="background:'+card.avatar+'">'+card.name.charAt(0)+'</div><div><div class="name">'+card.name+'</div><div class="location">'+card.flag+' '+card.location+'</div></div></div><span class="badge badge-success">'+card.score+' score</span></div><div class="amount-section"><div class="amount">'+fmtCur(card.amount,card.from)+'</div><div class="conversion">→ '+fmt(card.amount*card.rate,0)+' '+card.to+'</div><div class="corridor-label">'+card.from+' → '+card.to+' corridor</div></div><div class="details"><div class="detail-item"><div class="detail-label">Rate</div><div class="detail-value">'+fmt(card.rate,2)+'</div></div><div class="detail-item"><div class="detail-label">Type</div><div class="detail-value" style="font-size:10px">'+card.lpType+'</div></div><div class="detail-item"><div class="detail-label">Reliability</div><div class="detail-value" style="color:'+reliabilityColor+'">'+card.reliability+'</div></div><div class="detail-item"><div class="detail-label">Settlement</div><div class="detail-value">'+card.time+'</div></div></div></div>'}).join('')+'</div><div class="swipe-actions"><button class="swipe-btn pass" onclick="swipePass()">✕</button><button class="swipe-btn match" onclick="swipeMatch()">✓</button></div><div class="swipe-hint">← Swipe left to pass • Swipe right to match →</div></div>';
 }
 
 function renderSenderHistory(){
@@ -2236,29 +1650,10 @@ return lpSelector+'<div class="grid-4"><div class="stat-card green"><div class="
 }
 
 function renderLPOrders(){
-// NEW: Show incoming quote requests at the top
-const lpProfile=LP_PROFILES[activeLPId];
-let pendingRequests=LP_REQUESTS.filter(r=>r.status==='pending');
-const quotedRequests=LP_REQUESTS.filter(r=>r.status==='quoted');
 const showDemo=DEMO_TX&&['matched','pending'].includes(DEMO_TX.status);
 const orders=[{id:'ORD-4521',corridor:'AED→NGN',amount:2500,rate:431.5,score:85},{id:'ORD-4520',corridor:'USD→INR',amount:1800,rate:83.2,score:78},{id:'ORD-4519',corridor:'AED→PHP',amount:1200,rate:15.2,score:82},{id:'ORD-4518',corridor:'GBP→ZWL',amount:600,rate:461,score:74},{id:'ORD-4517',corridor:'AED→GHS',amount:900,rate:4.21,score:80}];
 const hl=guidedMode&&guidedStep===2&&!freeMode?' guided-highlight':'';
-
-// Get unique corridors this LP can serve
-const lpCorridors=['ALL',...new Set(lpProfile.supportedCorridors.map(c=>c.replace('_','-')))];
-
-// Filter requests by corridor if not ALL
-if(LP_CORRIDOR_FILTER!=='ALL'){
-  pendingRequests=pendingRequests.filter(r=>r.corridor===LP_CORRIDOR_FILTER);
-}
-
-// Corridor filter dropdown
-const corridorFilter='<div class="form-group" style="max-width:200px"><label class="form-label">Filter by Corridor</label><select class="form-select" onchange="LP_CORRIDOR_FILTER=this.value;render()">'+lpCorridors.map(c=>'<option value="'+c+'"'+(LP_CORRIDOR_FILTER===c?' selected':'')+'>'+c+'</option>').join('')+'</select></div>';
-
-// NEW: Incoming quote requests section
-const requestsSection=pendingRequests.length||LP_REQUESTS.filter(r=>r.status==='pending').length?'<div class="card" style="border-color:var(--purple);background:rgba(163,113,247,0.05)"><div class="card-header"><div class="card-title">📥 Incoming Quote Requests</div><span class="badge badge-new">'+pendingRequests.length+' '+(LP_CORRIDOR_FILTER!=='ALL'?'filtered':'new')+'</span></div>'+corridorFilter+(pendingRequests.length?pendingRequests.map(req=>'<div class="order-item new"><div class="order-corridor">'+(CURRENCIES[req.fromCur]?.flag||'🌍')+' → '+(CURRENCIES[req.toCur]?.flag||'🌍')+'</div><div class="order-details"><div class="order-amount">'+fmtCur(req.amount,req.fromCur)+' • '+req.id+'</div><div class="order-rate">Base: '+fmt(req.baseRate,2)+' '+req.toCur+' <span class="badge badge-info" style="font-size:9px">'+req.corridor+'</span></div></div><div style="text-align:right;font-size:11px"><div style="color:var(--text2)">'+new Date(req.createdAt).toLocaleTimeString()+'</div></div><button class="btn btn-sm btn-primary" onclick="showQuoteSubmitModal(\''+req.id+'\','+req.amount+',\''+req.fromCur+'\',\''+req.toCur+'\','+req.baseRate+')">Submit Quote</button></div>').join(''):'<div style="padding:20px;text-align:center;color:var(--text2)">No requests for '+LP_CORRIDOR_FILTER+'</div>')+'</div>':'';
-
-return requestsSection+'<div class="card'+hl+'"><div class="card-header"><div class="card-title">📋 Matched Orders</div><span class="badge badge-info">'+(showDemo?orders.length+1:orders.length)+' orders</span><button class="btn btn-sm btn-secondary" onclick="showToast(\'Order book exported\',\'success\')">📊 Export</button></div>'+(showDemo?'<div class="order-item highlight new"><div class="order-corridor">'+(CURRENCIES[DEMO_TX.fromCur]?.flag||'🌍')+' → '+(CURRENCIES[DEMO_TX.toCur]?.flag||'🌍')+'</div><div class="order-details"><div class="order-amount">'+fmtCur(DEMO_TX.amount,DEMO_TX.fromCur)+' • '+DEMO_TX.id+'</div><div class="order-rate">Rate: '+fmt(getRate(DEMO_TX.fromCur,DEMO_TX.toCur),2)+' '+(DEMO_TX.premium?'<span class="badge badge-premium">Priority</span>':'')+' '+(DEMO_TX.scheduled?'<span class="badge badge-scheduled">Scheduled</span>':'')+'</div></div><div class="order-score"><div class="order-score-value">'+getActiveSender().score+'</div><div class="order-score-label">score</div></div><div style="display:flex;gap:6px"><button class="btn btn-sm btn-success" onclick="lpAcceptOrder()">Accept</button>'+(DEMO_TX.status!=='completed'?'<button class="btn btn-sm" style="background:var(--bg3);color:var(--yellow);border:1px solid var(--border)" onclick="event.stopPropagation();showIssueModal(\'lp\')">🚩</button>':'')+'</div></div>':'')+orders.map(o=>'<div class="order-item" onclick="showToast(\'Order '+o.id+': '+o.corridor+', $'+o.amount+'\',\'info\')"><div class="order-corridor">'+o.corridor.split('→').map(c=>CURRENCIES[c.trim()]?.flag||'🌍').join(' → ')+'</div><div class="order-details"><div class="order-amount">$'+fmt(o.amount,0)+' • '+o.id+'</div><div class="order-rate">Rate: '+fmt(o.rate,2)+'</div></div><div class="order-score"><div class="order-score-value">'+o.score+'</div><div class="order-score-label">score</div></div><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();showToast(\'Accepted order '+o.id+'\',\'success\')">Accept</button></div>').join('')+'</div>';
+return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">📋 Order Book</div><span class="badge badge-info">'+(showDemo?orders.length+1:orders.length)+' orders</span><button class="btn btn-sm btn-secondary" onclick="showToast(\'Order book exported\',\'success\')">📊 Export</button></div>'+(showDemo?'<div class="order-item highlight new"><div class="order-corridor">'+(CURRENCIES[DEMO_TX.fromCur]?.flag||'🌍')+' → '+(CURRENCIES[DEMO_TX.toCur]?.flag||'🌍')+'</div><div class="order-details"><div class="order-amount">'+fmtCur(DEMO_TX.amount,DEMO_TX.fromCur)+' • '+DEMO_TX.id+'</div><div class="order-rate">Rate: '+fmt(getRate(DEMO_TX.fromCur,DEMO_TX.toCur),2)+' '+(DEMO_TX.premium?'<span class="badge badge-premium">Priority</span>':'')+' '+(DEMO_TX.scheduled?'<span class="badge badge-scheduled">Scheduled</span>':'')+'</div></div><div class="order-score"><div class="order-score-value">'+getActiveSender().score+'</div><div class="order-score-label">score</div></div><div style="display:flex;gap:6px"><button class="btn btn-sm btn-success" onclick="lpAcceptOrder()">Accept</button>'+(DEMO_TX.status!=='completed'?'<button class="btn btn-sm" style="background:var(--bg3);color:var(--yellow);border:1px solid var(--border)" onclick="event.stopPropagation();showIssueModal(\'lp\')">🚩</button>':'')+'</div></div>':'')+orders.map(o=>'<div class="order-item" onclick="showToast(\'Order '+o.id+': '+o.corridor+', $'+o.amount+'\',\'info\')"><div class="order-corridor">'+o.corridor.split('→').map(c=>CURRENCIES[c.trim()]?.flag||'🌍').join(' → ')+'</div><div class="order-details"><div class="order-amount">$'+fmt(o.amount,0)+' • '+o.id+'</div><div class="order-rate">Rate: '+fmt(o.rate,2)+'</div></div><div class="order-score"><div class="order-score-value">'+o.score+'</div><div class="order-score-label">score</div></div><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();showToast(\'Accepted order '+o.id+'\',\'success\')">Accept</button></div>').join('')+'</div>';
 }
 
 function renderLPPositions(){
@@ -2266,18 +1661,7 @@ return'<div class="card"><div class="card-header"><div class="card-title">💰 L
 }
 
 function renderLPPricing(){
-// FIX 1: Add corridor filter
-const lpProfile=LP_PROFILES[activeLPId];
-const lpCorridors=['ALL',...new Set(lpProfile.supportedCorridors.map(c=>c.replace('_','-')))];
-const corridorFilter='<div class="form-group" style="max-width:200px"><label class="form-label">Filter by Corridor</label><select id="lpCorridorFilter" class="form-select form-select-sm" onchange="LP_CORRIDOR_FILTER=this.value;render()">'+lpCorridors.map(c=>'<option value="'+c+'"'+(LP_CORRIDOR_FILTER===c?' selected':'')+'>'+c+'</option>').join('')+'</select></div>';
-
-// Filter corridors based on selection
-let filteredCorridors=TOP_CORRIDORS;
-if(LP_CORRIDOR_FILTER!=='ALL'){
-  filteredCorridors=TOP_CORRIDORS.filter(c=>(c.from+'-'+c.to)===LP_CORRIDOR_FILTER);
-}
-
-return'<div class="card"><div class="card-header"><div class="card-title">💲 Corridor Pricing</div><button class="btn btn-sm btn-secondary" onclick="showToast(\'Pricing exported\',\'success\')">📊 Export</button></div>'+corridorFilter+'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:12px;font-size:11px;color:var(--text2)">CORRIDOR</th><th style="text-align:center;padding:12px;font-size:11px;color:var(--text2)">TIER</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">LP FEE</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">ANCHOR FEE</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">FB MARGIN</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">TOTAL</th></tr></thead><tbody>'+(filteredCorridors.length?filteredCorridors.map(c=>{const p=corridorPricing[c.tier];return'<tr style="border-bottom:1px solid var(--border)"><td style="padding:12px"><div style="font-weight:600">'+c.from+' → '+c.to+'</div><div style="font-size:11px;color:var(--text2)">'+c.name+'</div></td><td style="text-align:center;padding:12px"><span class="badge badge-'+(c.tier===1?'success':c.tier===2?'info':c.tier===3?'warning':'danger')+'">Tier '+c.tier+'</span></td><td style="text-align:right;padding:12px;color:var(--green)">$'+fmt(p.lp,2)+'</td><td style="text-align:right;padding:12px;color:var(--green)">$'+fmt(p.anchor,2)+'</td><td style="text-align:right;padding:12px;color:var(--accent)">$'+fmt(p.fb,2)+'</td><td style="text-align:right;padding:12px;font-weight:600">$'+fmt(p.lp+p.anchor+p.fb,2)+'</td></tr>'}).join(''):'<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text2)">No corridors match filter</td></tr>')+'</tbody></table></div></div><div class="investor-highlight"><div class="title">💡 LP Earning Potential</div><div class="value">$'+fmt(LP_PROFILES[activeLPId].revenue,0)+' earned</div><div class="sub">Earn '+fmt(corridorPricing[2].lp,2)+' per avg transaction • Scale with volume</div></div>';
+return'<div class="card"><div class="card-header"><div class="card-title">💲 Corridor Pricing</div><button class="btn btn-sm btn-secondary" onclick="showToast(\'Pricing exported\',\'success\')">📊 Export</button></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:12px;font-size:11px;color:var(--text2)">CORRIDOR</th><th style="text-align:center;padding:12px;font-size:11px;color:var(--text2)">TIER</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">LP FEE</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">ANCHOR FEE</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">FB MARGIN</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">TOTAL</th></tr></thead><tbody>'+TOP_CORRIDORS.map(c=>{const p=corridorPricing[c.tier];return'<tr style="border-bottom:1px solid var(--border)"><td style="padding:12px"><div style="font-weight:600">'+c.from+' → '+c.to+'</div><div style="font-size:11px;color:var(--text2)">'+c.name+'</div></td><td style="text-align:center;padding:12px"><span class="badge badge-'+(c.tier===1?'success':c.tier===2?'info':c.tier===3?'warning':'danger')+'">Tier '+c.tier+'</span></td><td style="text-align:right;padding:12px;color:var(--green)">$'+fmt(p.lp,2)+'</td><td style="text-align:right;padding:12px;color:var(--green)">$'+fmt(p.anchor,2)+'</td><td style="text-align:right;padding:12px;color:var(--accent)">$'+fmt(p.fb,2)+'</td><td style="text-align:right;padding:12px;font-weight:600">$'+fmt(p.lp+p.anchor+p.fb,2)+'</td></tr>'}).join('')+'</tbody></table></div></div><div class="investor-highlight"><div class="title">💡 LP Earning Potential</div><div class="value">$'+fmt(LP_PROFILES[activeLPId].revenue,0)+' earned</div><div class="sub">Earn '+fmt(corridorPricing[2].lp,2)+' per avg transaction • Scale with volume</div></div>';
 }
 
 // ============ ANCHOR VIEWS ============
@@ -2343,110 +1727,8 @@ const all=DEMO_TX?[DEMO_TX,...txHistory]:txHistory;
 return'<div class="card"><div class="card-header"><div class="card-title">📋 All Transactions</div><span class="badge badge-info">'+(all.length||0)+' total</span>'+(flagged.length?'<span class="badge badge-danger" style="margin-left:8px">'+flagged.length+' flagged</span>':'')+'<button class="btn btn-sm btn-secondary" onclick="showToast(\'Transactions exported\',\'success\')">📊 Export</button></div>'+(all.length?all.map(tx=>'<div class="tx-row'+(tx.pattern==='bilateral'?' suspicious':'')+'" onclick="'+(tx.pattern==='bilateral'?'showFraudReviewModal({id:\''+tx.id+'\'})':'showTxDetailModal({id:\''+tx.id+'\',amount:'+(tx.amount||500)+',fromCur:\''+(tx.fromCur||'AED')+'\',toCur:\''+(tx.toCur||'NGN')+'\',status:\''+(tx.status||'pending')+'\'})') +'"><div class="tx-icon" style="background:'+(tx.pattern==='bilateral'?'rgba(248,81,73,0.1)':'rgba(88,166,255,0.1)')+'">'+(tx.pattern==='bilateral'?'⚠️':(CURRENCIES[tx.toCur]?.flag||'💸'))+'</div><div class="tx-info"><div class="tx-title">'+tx.id+' <span class="badge badge-'+(tx.status==='completed'?'success':tx.status==='flagged'?'danger':'info')+'">'+(tx.status||'pending')+'</span>'+(tx.premium?' <span class="badge badge-premium">Premium</span>':'')+(tx.scheduled?' <span class="badge badge-scheduled">Scheduled</span>':'')+(tx.pattern==='bilateral'?' <span class="badge badge-collusion">Pattern Detected</span>':'')+'</div><div class="tx-detail">'+(tx.fromCur||tx.corridor||'AED→NGN')+' • '+(tx.timestamp?.toLocaleString()||'Just now')+'</div></div><div class="tx-amount"><div class="tx-value">'+fmtCur(tx.amount||500,tx.fromCur||tx.cur||'AED')+'</div>'+(tx.pattern==='bilateral'?'<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();showFraudReviewModal({id:\''+tx.id+'\'})">Review</button>':'')+'</div></div>').join(''):'<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No transactions yet</div></div>')+'</div>';
 }
 
-function renderAdminIssues(){
-  const openIssues  = ISSUES.filter(i => i.status === 'open');
-  const closedIssues = ISSUES.filter(i => i.status !== 'open');
-
-  const badgeClass = openIssues.length ? 'badge-danger' : 'badge-success';
-  const badgeLabel = openIssues.length
-    ? `${openIssues.length} open`
-    : 'All clear';
-
-  // If there are no issues at all, show a simple "all clear" card
-  if (!ISSUES.length) {
-    return `
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">➕ Issues & Escalations</div>
-          <span class="badge ${badgeClass}">${badgeLabel}</span>
-        </div>
-        <div class="card-body text-muted">
-          No issues raised yet. All transactions are running smoothly.
-        </div>
-      </div>
-    `;
-  }
-
-  const renderIssueRow = issue => {
-    const created = issue.createdAt
-      ? new Date(issue.createdAt).toLocaleString()
-      : '';
-    const statusClass =
-      issue.status === 'open'
-        ? 'badge-danger'
-        : issue.status === 'under_review'
-        ? 'badge-warning'
-        : 'badge-success';
-
-    return `
-      <div class="flex items-center justify-between mb-2">
-        <div>
-          <div class="font-semibold text-sm">
-            ${issue.reason || 'Issue'} · ${issue.txId || ''}
-          </div>
-          <div class="text-xs text-muted">
-            ${issue.raisedByRole || ''}${created ? ' • ' + created : ''}
-          </div>
-          ${issue.detail ? `<div class="text-xs mt-1">${issue.detail}</div>` : ''}
-        </div>
-        <div class="text-xs">
-          <span class="badge ${statusClass}">${issue.status}</span>
-        </div>
-      </div>
-    `;
-  };
-
-  const openBlock = openIssues.length
-    ? `
-      <h4 class="text-xs uppercase text-muted mb-1">Open</h4>
-      ${openIssues.map(renderIssueRow).join('')}
-    `
-    : '';
-
-  const closedBlock = closedIssues.length
-    ? `
-      <h4 class="text-xs uppercase text-muted mt-3 mb-1">Closed</h4>
-      ${closedIssues.map(renderIssueRow).join('')}
-    `
-    : '';
-
-  return `
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">➕ Issues & Escalations</div>
-        <span class="badge ${badgeClass}">${badgeLabel}</span>
-      </div>
-      <div class="card-body">
-        ${openBlock}
-        ${closedBlock}
-      </div>
-    </div>
-  `;
-}
-
 function renderAdminRevenue(){
-// Get filtered revenue data based on date range
-const{breakdown,totalRevenue}=computeRevenueBreakdown();
-const{from,to,mode}=getAdminRevenueDateRange();
-
-// Date filter dropdown with CUSTOM option
-const dateFilter='<div class="form-group" style="max-width:200px"><label class="form-label">Time Period</label><select class="form-select" onchange="ADMIN_REVENUE_RANGE=this.value;render()"><option value="LAST_7"'+(mode==='LAST_7'?' selected':'')+'>Last 7 Days</option><option value="LAST_30"'+(mode==='LAST_30'?' selected':'')+'>Last 30 Days</option><option value="LAST_90"'+(mode==='LAST_90'?' selected':'')+'>Last 90 Days</option><option value="MTD"'+(mode==='MTD'?' selected':'')+'>Month to Date</option><option value="YTD"'+(mode==='YTD'?' selected':'')+'>Year to Date</option><option value="ALL"'+(mode==='ALL'?' selected':'')+'>All Time</option><option value="CUSTOM"'+(mode==='CUSTOM'?' selected':'')+'>📅 Custom Range</option></select></div>';
-
-// Custom date range inputs (shown only when CUSTOM is selected)
-const customDateInputs=mode==='CUSTOM'?'<div class="grid-2" style="margin-top:12px"><div class="form-group" style="margin-bottom:0"><label class="form-label">From Date</label><input type="date" class="form-input" value="'+(ADMIN_REVENUE_CUSTOM_FROM||'')+'" onchange="setCustomRevenueDate(\'from\',this.value)"></div><div class="form-group" style="margin-bottom:0"><label class="form-label">To Date</label><input type="date" class="form-input" value="'+(ADMIN_REVENUE_CUSTOM_TO||'')+'" onchange="setCustomRevenueDate(\'to\',this.value)"></div></div>':'';
-
-// Date range display
-const dateDisplay=from?'<div style="font-size:11px;color:var(--text2);margin-top:8px">'+from.toLocaleDateString()+' - '+to.toLocaleDateString()+'</div>':'<div style="font-size:11px;color:var(--text2);margin-top:8px">All time data</div>';
-
-// Calculate partner revenue shares
-const totalPartnerRevenue=breakdown.lpSubscriptions+breakdown.anchorSubscriptions;
-const lpSharePct=totalPartnerRevenue>0?(breakdown.lpSubscriptions/totalPartnerRevenue*100):50;
-const anchorSharePct=totalPartnerRevenue>0?(breakdown.anchorSubscriptions/totalPartnerRevenue*100):50;
-
-// Partner revenue split visualization
-const partnerSplitCard='<div class="card"><div class="card-header"><div class="card-title">🤝 Partner Revenue Split</div></div><div class="glass-card" style="margin-bottom:12px"><div style="font-weight:600;margin-bottom:12px;font-size:14px">Total Partner Revenue: $'+fmt(totalPartnerRevenue,2)+'</div><div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px">🏦 LP Subscriptions</span><span style="font-size:12px;font-weight:600;color:var(--accent)">'+fmt(lpSharePct,1)+'%</span></div><div style="height:24px;background:var(--bg4);border-radius:8px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:'+lpSharePct+'%;transition:width 0.5s"></div></div><div style="font-size:11px;color:var(--text2);margin-top:4px;text-align:right">$'+fmt(breakdown.lpSubscriptions,2)+'</div></div><div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px">🏪 Anchor Subscriptions</span><span style="font-size:12px;font-weight:600;color:var(--yellow)">'+fmt(anchorSharePct,1)+'%</span></div><div style="height:24px;background:var(--bg4);border-radius:8px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,var(--yellow),#f59e0b);width:'+anchorSharePct+'%;transition:width 0.5s"></div></div><div style="font-size:11px;color:var(--text2);margin-top:4px;text-align:right">$'+fmt(breakdown.anchorSubscriptions,2)+'</div></div></div><div class="investor-highlight"><div class="title">💼 Partner Economics</div><div class="value">Balanced ecosystem</div><div class="sub">LPs and Anchors each contribute to network liquidity and distribution • Subscription model ensures stable recurring revenue</div></div></div>';
-
-return'<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-title">📅 Revenue Period</div></div>'+dateFilter+customDateInputs+dateDisplay+'</div><div class="grid-4"><div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value">$'+fmt(totalRevenue,0)+'</div><div class="stat-label">Total Revenue</div></div><div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">$'+fmt(breakdown.transactionFees,0)+'</div><div class="stat-label">Transaction Fees</div></div><div class="stat-card yellow"><div class="stat-icon">📱</div><div class="stat-value">$'+fmt(breakdown.lpSubscriptions+breakdown.anchorSubscriptions,0)+'</div><div class="stat-label">Subscriptions</div></div><div class="stat-card purple"><div class="stat-icon">⭐</div><div class="stat-value">$'+fmt(breakdown.senderPremium,0)+'</div><div class="stat-label">Premium Fees</div></div></div><div class="grid-2"><div class="card"><div class="card-header"><div class="card-title">📈 Revenue Streams (6 Sources)</div><button class="btn btn-sm btn-secondary" onclick="showToast(\'Revenue report exported\',\'success\')">📊 Export</button></div><div class="revenue-breakdown" style="font-size:14px"><div class="revenue-row"><span class="label">💸 Transaction Fees (1.2%)</span><span class="value">$'+fmt(breakdown.transactionFees,2)+'</span></div><div class="revenue-row"><span class="label">🏦 LP Subscriptions</span><span class="value">$'+fmt(breakdown.lpSubscriptions,2)+'</span></div><div class="revenue-row"><span class="label">🏪 Anchor Subscriptions</span><span class="value">$'+fmt(breakdown.anchorSubscriptions,2)+'</span></div><div class="revenue-row"><span class="label">⭐ Sender Premium ($5/tx)</span><span class="value">$'+fmt(breakdown.senderPremium,2)+'</span></div><div class="revenue-row"><span class="label">🏢 Institutional API</span><span class="value">$'+fmt(breakdown.institutionalApi,2)+'</span></div><div class="revenue-row"><span class="label">📊 Data & Analytics</span><span class="value">$'+fmt(breakdown.dataAnalytics,2)+'</span></div><div class="revenue-row" style="border-top:2px solid var(--border);padding-top:12px;margin-top:8px"><span class="label" style="font-weight:700;font-size:15px">Total Revenue</span><span class="value" style="font-weight:700;font-size:16px;color:var(--green)">$'+fmt(totalRevenue,2)+'</span></div></div></div>'+partnerSplitCard+'</div><div class="investor-highlight"><div class="title">💡 Revenue Model</div><div class="value">Multi-stream monetization</div><div class="sub">Diversified revenue across transaction fees, subscriptions, and B2B services • Target: 3% blended take rate</div></div>';
+return'<div class="grid-4"><div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value">$'+fmt(BUSINESS_METRICS.revenueTotal,0)+'</div><div class="stat-label">Total Revenue</div></div><div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value">$'+fmt(BUSINESS_METRICS.revenueFX,0)+'</div><div class="stat-label">FX Revenue</div></div><div class="stat-card yellow"><div class="stat-icon">⭐</div><div class="stat-value">$'+fmt(BUSINESS_METRICS.revenuePremium,0)+'</div><div class="stat-label">Premium Fees</div></div><div class="stat-card purple"><div class="stat-icon">🤝</div><div class="stat-value">$'+fmt(BUSINESS_METRICS.revenueLP+BUSINESS_METRICS.revenueAnchor,0)+'</div><div class="stat-label">Partner Revenue</div></div></div><div class="card"><div class="card-header"><div class="card-title">📈 Revenue Streams</div><button class="btn btn-sm btn-secondary" onclick="showToast(\'Revenue report exported\',\'success\')">📊 Export</button></div><div class="revenue-breakdown" style="font-size:14px"><div class="revenue-row"><span class="label">FX Spread (1.2% avg)</span><span class="value">$'+fmt(BUSINESS_METRICS.revenueFX,0)+'</span></div><div class="revenue-row"><span class="label">Premium Fast-Track ($5/tx)</span><span class="value">$'+fmt(BUSINESS_METRICS.revenuePremium,0)+'</span></div><div class="revenue-row"><span class="label">LP Revenue Share</span><span class="value">$'+fmt(BUSINESS_METRICS.revenueLP,0)+'</span></div><div class="revenue-row"><span class="label">Anchor Revenue Share</span><span class="value">$'+fmt(BUSINESS_METRICS.revenueAnchor,0)+'</span></div></div></div><div class="investor-highlight"><div class="title">💡 Key Metrics</div><div class="value">1.5% blended take rate</div><div class="sub">$2.8M volume → $42K revenue • Path to 3% take rate with premium adoption</div></div>';
 }
 
 function renderAdminCorridors(){
@@ -2459,12 +1741,7 @@ const p=corridorPricing[tier];
 const badgeClass=tier==1?'success':tier==2?'info':tier==3?'warning':'danger';
 return'<tr style="border-bottom:1px solid var(--border)"><td style="text-align:center;padding:12px"><span class="badge badge-'+badgeClass+'">Tier '+tier+'</span></td><td style="text-align:right;padding:12px"><input type="number" value="'+p.lp+'" step="0.1" min="0" style="width:80px;padding:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);text-align:right" onchange="corridorPricing['+tier+'].lp=parseFloat(this.value);render()"></td><td style="text-align:right;padding:12px"><input type="number" value="'+p.anchor+'" step="0.1" min="0" style="width:80px;padding:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);text-align:right" onchange="corridorPricing['+tier+'].anchor=parseFloat(this.value);render()"></td><td style="text-align:right;padding:12px"><input type="number" value="'+p.fb+'" step="0.1" min="0" style="width:80px;padding:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);text-align:right" onchange="corridorPricing['+tier+'].fb=parseFloat(this.value);render()"></td><td style="text-align:right;padding:12px;font-weight:600;color:var(--green)">$'+fmt(p.lp+p.anchor+p.fb,2)+'</td></tr>';
 }).join('');
-
-// LP Pricing Bands section
-const band=PRICING_BANDS.default;
-const lpBandsSection='<div class="card" style="margin-top:16px"><div class="card-header"><div class="card-title">🎯 LP Pricing Bands</div><button class="btn btn-sm btn-secondary" onclick="PRICING_BANDS.default={minDeltaPct:-5,maxDeltaPct:2};render();showToast(\'LP bands reset to defaults\',\'success\')">Reset Bands</button></div><div class="glass-card"><div style="font-weight:600;margin-bottom:12px">Default LP Rate Limits (All Corridors)</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px"><div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:6px">MIN DELTA (%)</label><input type="number" value="'+band.minDeltaPct+'" step="0.5" min="-20" max="0" style="width:100%;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:16px;font-weight:600" onchange="PRICING_BANDS.default.minDeltaPct=parseFloat(this.value);render();showToast(\'Min delta updated to \'+this.value+\'%\',\'success\')"></div><div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:6px">MAX DELTA (%)</label><input type="number" value="'+band.maxDeltaPct+'" step="0.5" min="0" max="20" style="width:100%;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:16px;font-weight:600" onchange="PRICING_BANDS.default.maxDeltaPct=parseFloat(this.value);render();showToast(\'Max delta updated to \'+this.value+\'%\',\'success\')"></div></div><div style="font-size:11px;color:var(--text2);padding:12px;background:var(--bg4);border-radius:8px"><strong>What this means:</strong><br>• LPs can price '+band.minDeltaPct+'% <strong>below</strong> FlowBridge rate (discount to sender)<br>• LPs can price up to +'+band.maxDeltaPct+'% <strong>above</strong> FlowBridge rate (markup)<br>• Rates outside this range will be rejected</div><div style="margin-top:12px;font-size:11px;padding:12px;background:rgba(88,166,255,0.05);border:1px solid rgba(88,166,255,0.2);border-radius:8px;color:var(--accent)"><strong>💡 Example:</strong> If FlowBridge rate is 100 INR/AED, LPs can quote between '+fmt(100*(1+band.minDeltaPct/100),2)+' and '+fmt(100*(1+band.maxDeltaPct/100),2)+' INR/AED</div></div></div>';
-
-return'<div class="card"><div class="card-header"><div class="card-title">💲 Pricing Controls</div><button class="btn btn-sm btn-secondary" onclick="Object.keys(corridorPricing).forEach(function(t){corridorPricing[t]=Object.assign({},defaultCorridorPricing[t])});render();showToast(\'Pricing reset to defaults\',\'success\')">Reset to Defaults</button></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:center;padding:12px;font-size:11px;color:var(--text2)">TIER</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">LP FEE ($)</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">ANCHOR FEE ($)</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">FB MARGIN ($)</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">TOTAL ($)</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+lpBandsSection+'<div class="card"><div class="card-header"><div class="card-title">🎯 Stress Test Simulator</div></div><div class="glass-card" style="margin-bottom:16px"><div style="font-weight:600;margin-bottom:12px">Dynamic Pricing Parameters</div><div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px">Liquidity Pressure Index (LPI)</span><span style="font-size:12px;color:var(--accent)" id="lpiValue">0.3</span></div><input type="range" min="0" max="1" step="0.05" value="0.3" style="width:100%" id="lpiSlider" onchange="document.getElementById(\'lpiValue\').textContent=this.value;updateStressSim()"><div style="font-size:10px;color:var(--text2);margin-top:4px">0 = High liquidity available | 1 = Liquidity constrained</div></div><div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px">Volatility Index (VIXc)</span><span style="font-size:12px;color:var(--accent)" id="vixValue">0.15</span></div><input type="range" min="0" max="0.3" step="0.01" value="0.15" style="width:100%" id="vixSlider" onchange="document.getElementById(\'vixValue\').textContent=this.value;updateStressSim()"><div style="font-size:10px;color:var(--text2);margin-top:4px">0 = Stable currency | 0.3 = High volatility</div></div><div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px">Risk Profile Score (RPS)</span><span style="font-size:12px;color:var(--accent)" id="rpsValue">0.2</span></div><input type="range" min="0" max="1" step="0.05" value="0.2" style="width:100%" id="rpsSlider" onchange="document.getElementById(\'rpsValue\').textContent=this.value;updateStressSim()"><div style="font-size:10px;color:var(--text2);margin-top:4px">0 = Low risk corridor | 1 = High risk</div></div></div><div id="stressResults"><div class="glass-card"><div style="font-weight:600;margin-bottom:8px">Tier 2 Stress Test Results</div><div class="revenue-breakdown"><div class="revenue-row"><span class="label">Base LP Fee</span><span class="value">$1.00</span></div><div class="revenue-row"><span class="label">Stressed LP Fee</span><span class="value" id="stressLp">$1.39</span></div><div class="revenue-row"><span class="label">Base Anchor Fee</span><span class="value">$1.00</span></div><div class="revenue-row"><span class="label">Stressed Anchor Fee</span><span class="value" id="stressAnchor">$1.39</span></div><div class="revenue-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px"><span class="label" style="font-weight:600">Multiplier</span><span class="value" id="stressMultiplier">1.39x</span></div></div></div></div></div><div class="investor-highlight"><div class="title">💡 Dynamic Pricing Model</div><div class="value">Real-time risk adjustment</div><div class="sub">Pricing automatically adjusts based on liquidity, volatility, and risk factors</div></div>';
+return'<div class="card"><div class="card-header"><div class="card-title">💲 Pricing Controls</div><button class="btn btn-sm btn-secondary" onclick="Object.keys(corridorPricing).forEach(function(t){corridorPricing[t]=Object.assign({},defaultCorridorPricing[t])});render();showToast(\'Pricing reset to defaults\',\'success\')">Reset to Defaults</button></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:center;padding:12px;font-size:11px;color:var(--text2)">TIER</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">LP FEE ($)</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">ANCHOR FEE ($)</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">FB MARGIN ($)</th><th style="text-align:right;padding:12px;font-size:11px;color:var(--text2)">TOTAL ($)</th></tr></thead><tbody>'+rows+'</tbody></table></div></div><div class="card"><div class="card-header"><div class="card-title">🎯 Stress Test Simulator</div></div><div class="glass-card" style="margin-bottom:16px"><div style="font-weight:600;margin-bottom:12px">Dynamic Pricing Parameters</div><div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px">Liquidity Pressure Index (LPI)</span><span style="font-size:12px;color:var(--accent)" id="lpiValue">0.3</span></div><input type="range" min="0" max="1" step="0.05" value="0.3" style="width:100%" id="lpiSlider" onchange="document.getElementById(\'lpiValue\').textContent=this.value;updateStressSim()"><div style="font-size:10px;color:var(--text2);margin-top:4px">0 = High liquidity available | 1 = Liquidity constrained</div></div><div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px">Volatility Index (VIXc)</span><span style="font-size:12px;color:var(--accent)" id="vixValue">0.15</span></div><input type="range" min="0" max="0.3" step="0.01" value="0.15" style="width:100%" id="vixSlider" onchange="document.getElementById(\'vixValue\').textContent=this.value;updateStressSim()"><div style="font-size:10px;color:var(--text2);margin-top:4px">0 = Stable currency | 0.3 = High volatility</div></div><div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px">Risk Profile Score (RPS)</span><span style="font-size:12px;color:var(--accent)" id="rpsValue">0.2</span></div><input type="range" min="0" max="1" step="0.05" value="0.2" style="width:100%" id="rpsSlider" onchange="document.getElementById(\'rpsValue\').textContent=this.value;updateStressSim()"><div style="font-size:10px;color:var(--text2);margin-top:4px">0 = Low risk corridor | 1 = High risk</div></div></div><div id="stressResults"><div class="glass-card"><div style="font-weight:600;margin-bottom:8px">Tier 2 Stress Test Results</div><div class="revenue-breakdown"><div class="revenue-row"><span class="label">Base LP Fee</span><span class="value">$1.00</span></div><div class="revenue-row"><span class="label">Stressed LP Fee</span><span class="value" id="stressLp">$1.39</span></div><div class="revenue-row"><span class="label">Base Anchor Fee</span><span class="value">$1.00</span></div><div class="revenue-row"><span class="label">Stressed Anchor Fee</span><span class="value" id="stressAnchor">$1.39</span></div><div class="revenue-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px"><span class="label" style="font-weight:600">Multiplier</span><span class="value" id="stressMultiplier">1.39x</span></div></div></div></div></div><div class="investor-highlight"><div class="title">💡 Dynamic Pricing Model</div><div class="value">Real-time risk adjustment</div><div class="sub">Pricing automatically adjusts based on liquidity, volatility, and risk factors</div></div>';
 }
 
 function updateStressSim(){
@@ -2519,16 +1796,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   startScheduledMonitor(); // Start monitoring scheduled transfers
 });
 
-// Keyboard shortcuts help modal
-function showKeyboardShortcutsModal(){
-  const html='<div class="modal-header"><span class="modal-title">⌨️ Keyboard Shortcuts</span><button class="modal-close" onclick="forceCloseModal()">✕</button></div><div class="modal-body"><div class="glass-card" style="margin-bottom:12px"><div style="font-weight:600;margin-bottom:12px">Navigation Shortcuts</div><div style="display:grid;gap:8px;font-size:13px"><div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg4);border-radius:6px"><span>Switch to Sender</span><kbd class="kb-hint" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px">1</kbd></div><div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg4);border-radius:6px"><span>Switch to LP</span><kbd class="kb-hint">2</kbd></div><div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg4);border-radius:6px"><span>Switch to Anchor</span><kbd class="kb-hint">3</kbd></div><div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg4);border-radius:6px"><span>Switch to Receiver</span><kbd class="kb-hint">4</kbd></div><div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg4);border-radius:6px"><span>Switch to Admin</span><kbd class="kb-hint">5</kbd></div></div></div><div class="glass-card"><div style="font-weight:600;margin-bottom:12px">Demo Controls</div><div style="display:grid;gap:8px;font-size:13px"><div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg4);border-radius:6px"><span>Reset Demo</span><kbd class="kb-hint">R</kbd></div><div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg4);border-radius:6px"><span>Toggle Guided Mode</span><kbd class="kb-hint">G</kbd></div><div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg4);border-radius:6px"><span>Toggle Free Mode</span><kbd class="kb-hint">F</kbd></div><div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg4);border-radius:6px"><span>Show Keyboard Shortcuts</span><kbd class="kb-hint">?</kbd></div></div></div></div><div class="modal-footer"><button class="btn btn-primary" onclick="forceCloseModal()">Got it</button></div>';
-  openModal(html);
-}
-
 // Keyboard shortcuts
 document.addEventListener('keydown',(e)=>{
-  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA')return;
-  if(e.key==='?'){showKeyboardShortcutsModal();return}
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
   if(e.key==='r'||e.key==='R'){resetDemo()}
   if(e.key==='g'||e.key==='G'){toggleGuidedDemo()}
   if(e.key==='f'||e.key==='F'){toggleMode()}
