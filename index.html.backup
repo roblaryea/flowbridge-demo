@@ -157,8 +157,8 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 .savings-highlight{background:linear-gradient(135deg,rgba(63,185,80,0.15),rgba(57,211,83,0.1));border:1px solid rgba(63,185,80,0.3);border-radius:10px;padding:12px;margin-top:12px;text-align:center}
 .savings-highlight .amount{font-size:20px;font-weight:700;color:var(--green)}
 .savings-highlight .label{font-size:11px;color:var(--text2)}
-.swipe-container{position:relative;max-width:400px;margin:0 auto;min-height:500px;padding-bottom:100px}
-.swipe-card{position:absolute;width:100%;background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:24px;cursor:grab;transition:transform 0.3s,opacity 0.3s;user-select:none;margin-bottom:20px}
+.swipe-container{position:relative;max-width:400px;margin:0 auto;height:460px}
+.swipe-card{position:absolute;width:100%;background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:24px;cursor:grab;transition:transform 0.3s,opacity 0.3s;user-select:none}
 .swipe-card:active{cursor:grabbing}
 .swipe-card.dragging{transition:none}
 .swipe-card .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
@@ -174,7 +174,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 .swipe-card .detail-item{padding:12px;background:var(--bg4);border-radius:10px}
 .swipe-card .detail-label{font-size:10px;color:var(--text2);text-transform:uppercase;margin-bottom:4px}
 .swipe-card .detail-value{font-weight:600}
-.swipe-actions{display:flex;justify-content:center;gap:20px;margin-top:20px;position:relative;z-index:10}
+.swipe-actions{display:flex;justify-content:center;gap:20px;margin-top:20px}
 .swipe-btn{width:64px;height:64px;border-radius:50%;border:2px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:all 0.2s}
 .swipe-btn.pass:hover{border-color:var(--red);background:rgba(248,81,73,0.1);transform:scale(1.1)}
 .swipe-btn.match:hover{border-color:var(--green);background:rgba(63,185,80,0.1);transform:scale(1.1)}
@@ -521,8 +521,7 @@ const CURRENCIES={USD:{name:'US Dollar',symbol:'$',flag:'🇺🇸'},AED:{name:'U
 
 // Amount mode state
 let amountMode = 'send'; // 'send' or 'receive'
-let pricingCollapsed = true;
-let recipientCollapsed = true; // Recipient section collapsed by default
+let pricingCollapsed = false;
 
 const RATES={USD:{NGN:1580,INR:83.2,PHP:56.1,KES:154,GHS:15.4,ZAR:18.7,MXN:17.2,PKR:278,BDT:110,GBP:0.79,EUR:0.92,AED:3.67,ZWL:363},AED:{NGN:430,INR:22.6,PHP:15.2,KES:42,GHS:4.2,ZAR:5.1,PKR:75.6,BDT:30,USD:0.272,GBP:0.215,EUR:0.25,ZWL:99},GBP:{NGN:2000,INR:105,PHP:71,KES:195,GHS:19.5,ZAR:23.7,USD:1.27,EUR:1.17,AED:4.65,ZWL:460,PKR:352},EUR:{NGN:1720,INR:90.5,PHP:61,USD:1.09,GBP:0.86,AED:4.0,ZWL:395}};
 
@@ -638,52 +637,14 @@ const RECIPIENTS=[
 {id:'RCP-005',name:'Emeka Obi',country:'Nigeria',flag:'🇳🇬',method:'Bank Transfer',account:'**** 7712',cur:'NGN'}
 ];
 
-// Enhanced SWIPE data with multiple LPs per corridor
 const SWIPE=[
-  // AED → NGN corridor (Nigeria)
-  {id:'AED_NGN_LP1',corridor:'AED-NGN',name:'Emeka O.',flag:'🇳🇬',city:'Dubai, UAE',proximity:'Local LP',lpType:'Local MTO',reliability:92,settlement:'2 min',rateDeltaPct:0.74,score:78,avatar:'#f97316',badgeHint:'Best rate'},
-  {id:'AED_NGN_LP2',corridor:'AED-NGN',name:'Ahmed K.',flag:'🇳🇬',city:'Abu Dhabi, UAE',proximity:'Local LP',lpType:'Regional Bank',reliability:96,settlement:'3 min',rateDeltaPct:0.42,score:85,avatar:'#3b82f6',badgeHint:''},
-  {id:'AED_NGN_LP3',corridor:'AED-NGN',name:'Ibrahim T.',flag:'🇳🇬',city:'Lagos, Nigeria',proximity:'Cross-border LP',lpType:'Nigeria-based LP',reliability:85,settlement:'5 min',rateDeltaPct:-0.12,score:72,avatar:'#ef4444',badgeHint:'Closest LP'},
-  {id:'AED_NGN_LP4',corridor:'AED-NGN',name:'Fatima A.',flag:'🇳🇬',city:'Sharjah, UAE',proximity:'Local LP',lpType:'Local Exchange',reliability:89,settlement:'2 min',rateDeltaPct:0.38,score:81,avatar:'#a855f7',badgeHint:'Fastest payout'},
-  
-  // AED → PHP corridor (Philippines)
-  {id:'AED_PHP_LP1',corridor:'AED-PHP',name:'Carlos R.',flag:'🇵🇭',city:'Cebu, Philippines',proximity:'Regional LP',lpType:'Regional Branch',reliability:84,settlement:'5 min',rateDeltaPct:1.32,score:77,avatar:'#f43f5e',badgeHint:'Best rate'},
-  {id:'AED_PHP_LP2',corridor:'AED-PHP',name:'Grace M.',flag:'🇵🇭',city:'Manila, Philippines',proximity:'Regional LP',lpType:'Philippines Desk',reliability:89,settlement:'4 min',rateDeltaPct:0.66,score:80,avatar:'#ec4899',badgeHint:''},
-  {id:'AED_PHP_LP3',corridor:'AED-PHP',name:'Ramon S.',flag:'🇵🇭',city:'Dubai, UAE',proximity:'Local LP',lpType:'UAE-PH Partner',reliability:91,settlement:'3 min',rateDeltaPct:0.52,score:82,avatar:'#14b8a6',badgeHint:'Fastest payout'},
-  {id:'AED_PHP_LP4',corridor:'AED-PHP',name:'Isabel D.',flag:'🇵🇭',city:'Davao, Philippines',proximity:'Cross-border LP',lpType:'Regional Exchange',reliability:87,settlement:'6 min',rateDeltaPct:-0.18,score:75,avatar:'#f59e0b',badgeHint:'Closest LP'},
-  
-  // USD → INR corridor (India)
-  {id:'USD_INR_LP1',corridor:'USD-INR',name:'Raj P.',flag:'🇮🇳',city:'Delhi, India',proximity:'Local LP',lpType:'Local FX Partner',reliability:97,settlement:'1 min',rateDeltaPct:0.42,score:88,avatar:'#f59e0b',badgeHint:'Fastest payout'},
-  {id:'USD_INR_LP2',corridor:'USD-INR',name:'Priya S.',flag:'🇮🇳',city:'Mumbai, India',proximity:'Regional LP',lpType:'Regional FX Desk',reliability:90,settlement:'5 min',rateDeltaPct:0.58,score:82,avatar:'#8b5cf6',badgeHint:'Best rate'},
-  {id:'USD_INR_LP3',corridor:'USD-INR',name:'Anika D.',flag:'🇮🇳',city:'Bangalore, India',proximity:'Regional LP',lpType:'Tech Hub Exchange',reliability:88,settlement:'4 min',rateDeltaPct:-0.22,score:79,avatar:'#06b6d4',badgeHint:''},
-  {id:'USD_INR_LP4',corridor:'USD-INR',name:'Vikram K.',flag:'🇮🇳',city:'Chennai, India',proximity:'Cross-border LP',lpType:'South India Desk',reliability:93,settlement:'3 min',rateDeltaPct:0.31,score:85,avatar:'#3b82f6',badgeHint:'Closest LP'},
-  
-  // AED → GHS corridor (Ghana)
-  {id:'AED_GHS_LP1',corridor:'AED-GHS',name:'Ama K.',flag:'🇬🇭',city:'Dubai, UAE',proximity:'Local LP',lpType:'Premium Exchange',reliability:94,settlement:'2 min',rateDeltaPct:0.71,score:83,avatar:'#eab308',badgeHint:'Best rate'},
-  {id:'AED_GHS_LP2',corridor:'AED-GHS',name:'Kofi A.',flag:'🇬🇭',city:'Dubai, UAE',proximity:'Local LP',lpType:'Local FX Partner',reliability:91,settlement:'3 min',rateDeltaPct:0.24,score:75,avatar:'#10b981',badgeHint:'Fastest payout'},
-  {id:'AED_GHS_LP3',corridor:'AED-GHS',name:'Kwame B.',flag:'🇬🇭',city:'Accra, Ghana',proximity:'Cross-border LP',lpType:'Ghana-based',reliability:87,settlement:'4 min',rateDeltaPct:-0.24,score:79,avatar:'#14b8a6',badgeHint:'Closest LP'},
-  {id:'AED_GHS_LP4',corridor:'AED-GHS',name:'Abena Y.',flag:'🇬🇭',city:'Abu Dhabi, UAE',proximity:'Local LP',lpType:'Regional Partner',reliability:89,settlement:'3 min',rateDeltaPct:0.45,score:81,avatar:'#a855f7',badgeHint:''},
-  
-  // GBP → ZWL corridor (Zimbabwe)
-  {id:'GBP_ZWL_LP1',corridor:'GBP-ZWL',name:'Tendai M.',flag:'🇿🇼',city:'Harare, Zimbabwe',proximity:'Cross-border LP',lpType:'Local MTO',reliability:80,settlement:'6 min',rateDeltaPct:0.22,score:71,avatar:'#6366f1',badgeHint:'Closest LP'},
-  {id:'GBP_ZWL_LP2',corridor:'GBP-ZWL',name:'Rudo K.',flag:'🇿🇼',city:'London, UK',proximity:'Local LP',lpType:'UK-Zimbabwe Desk',reliability:88,settlement:'4 min',rateDeltaPct:0.48,score:79,avatar:'#ef4444',badgeHint:'Best rate'},
-  {id:'GBP_ZWL_LP3',corridor:'GBP-ZWL',name:'Tafadzwa N.',flag:'🇿🇼',city:'Bulawayo, Zimbabwe',proximity:'Regional LP',lpType:'Zimbabwe Partner',reliability:83,settlement:'5 min',rateDeltaPct:-0.15,score:74,avatar:'#10b981',badgeHint:''},
-  
-  // USD → MXN corridor (Mexico)
-  {id:'USD_MXN_LP1',corridor:'USD-MXN',name:'Maria L.',flag:'🇲🇽',city:'Mexico City',proximity:'Local LP',lpType:'Local Bank',reliability:95,settlement:'2 min',rateDeltaPct:0.38,score:83,avatar:'#f97316',badgeHint:'Fastest payout'},
-  {id:'USD_MXN_LP2',corridor:'USD-MXN',name:'Carlos G.',flag:'🇲🇽',city:'Guadalajara',proximity:'Regional LP',lpType:'Regional Exchange',reliability:89,settlement:'3 min',rateDeltaPct:0.52,score:81,avatar:'#3b82f6',badgeHint:'Best rate'},
-  {id:'USD_MXN_LP3',corridor:'USD-MXN',name:'Ana R.',flag:'🇲🇽',city:'Monterrey',proximity:'Cross-border LP',lpType:'North Mexico Desk',reliability:91,settlement:'4 min',rateDeltaPct:0.19,score:78,avatar:'#ec4899',badgeHint:'Closest LP'}
+{id:'SW-001',name:'Emeka O.',flag:'🇳🇬',from:'AED',to:'NGN',amount:2000,rate:432,score:78,time:'2 min',avatar:'#f97316',location:'Dubai, UAE',lpType:'Local MTO',reliability:'High'},
+{id:'SW-002',name:'Priya S.',flag:'🇮🇳',from:'USD',to:'INR',amount:1500,rate:83.5,score:82,time:'5 min',avatar:'#8b5cf6',location:'Mumbai, India',lpType:'Regional FX Desk',reliability:'High'},
+{id:'SW-003',name:'Kofi A.',flag:'🇬🇭',from:'AED',to:'GHS',amount:800,rate:4.22,score:75,time:'3 min',avatar:'#10b981',location:'Dubai, UAE',lpType:'Local FX Partner',reliability:'High'},
+{id:'SW-004',name:'Grace M.',flag:'🇵🇭',from:'AED',to:'PHP',amount:1200,rate:15.3,score:80,time:'4 min',avatar:'#ec4899',location:'Manila, Philippines',lpType:'Regional Desk',reliability:'High'},
+{id:'SW-005',name:'Raj P.',flag:'🇮🇳',from:'USD',to:'INR',amount:2500,rate:83.4,score:88,time:'1 min',avatar:'#f59e0b',location:'Delhi, India',lpType:'Local FX Partner',reliability:'Excellent'},
+{id:'SW-006',name:'Tendai M.',flag:'🇿🇼',from:'GBP',to:'ZWL',amount:500,rate:462,score:71,time:'6 min',avatar:'#6366f1',location:'Harare, Zimbabwe',lpType:'Local MTO',reliability:'Standard'}
 ];
-
-// Compute LP rates at initialization
-SWIPE.forEach(lp=>{
-  const baseRate=getRate(lp.from||lp.corridor.split('-')[0],lp.to||lp.corridor.split('-')[1]);
-  lp.from=lp.from||lp.corridor.split('-')[0];
-  lp.to=lp.to||lp.corridor.split('-')[1];
-  lp.lpRate=baseRate*(1+(lp.rateDeltaPct||0)/100);
-  lp.fbRate=baseRate;
-  lp.location=lp.city; // For backward compatibility
-});
 
 const SCENARIOS={
 A:{name:'Instant Send',desc:'UAE migrant worker sends 500 AED to Ghana',corridor:{from:'AED',to:'GHS'},amount:500,recipient:RECIPIENTS[0],schedule:'now',premium:false,user:'aisha'},
@@ -705,10 +666,6 @@ let currentRole='sender',currentView='dashboard',notifications=[],DEMO_TX=null,t
 let guidedMode=false,guidedStep=0,freeMode=false; // Mode flags
 let TOTAL_SAVINGS=847293,LP_REVENUE=18472,ANCHOR_REVENUE=12340;
 let BUSINESS_METRICS={totalVolume:2847293,txCount:1847,avgTxSize:1541,revenueTotal:42847,revenueFX:28400,revenuePremium:8200,revenueLP:4100,revenueAnchor:2147};
-
-// ============ LP QUOTES SYSTEM ============
-let LP_QUOTES = []; // Array to store LP quotes for transactions
-let LP_REQUESTS = []; // Array to store pending quote requests from senders
 
 // ============ ISSUES SYSTEM ============
 let ISSUES = [];
@@ -806,23 +763,7 @@ const CORRIDOR_TX_HISTORY={
 
 // ============ UTILITY FUNCTIONS ============
 function fmt(n,d=2){if(n===null||n===undefined)return'0';return new Intl.NumberFormat('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n)}
-function fmtAmount(n){if(isNaN(n)||n===null||n===undefined)return'0.00';return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function fmtCur(amt,cur){const c=CURRENCIES[cur];return c?(c.symbol||'')+fmt(amt):'$'+fmt(amt)}
-
-// Currency metadata for enhanced display
-const CURRENCY_META={
-  AED:{symbol:'د.إ',flag:'🇦🇪'},
-  USD:{symbol:'$',flag:'🇺🇸'},
-  INR:{symbol:'₹',flag:'🇮🇳'},
-  GBP:{symbol:'£',flag:'🇬🇧'},
-  EUR:{symbol:'€',flag:'🇪🇺'},
-  PHP:{symbol:'₱',flag:'🇵🇭'},
-  NGN:{symbol:'₦',flag:'🇳🇬'},
-  GHS:{symbol:'₵',flag:'🇬🇭'},
-  KES:{symbol:'KSh',flag:'🇰🇪'},
-  MXN:{symbol:'$',flag:'🇲🇽'},
-  ZWL:{symbol:'Z$',flag:'🇿🇼'}
-};
 function getRate(from,to){if(from===to)return 1;if(RATES[from]&&RATES[from][to])return RATES[from][to];if(RATES[to]&&RATES[to][from])return 1/RATES[to][from];if(RATES[from]&&RATES[from]['USD']&&RATES['USD']&&RATES['USD'][to])return RATES[from]['USD']*RATES['USD'][to];return 430} // Default fallback
 function getTradRate(from,to){if(TRAD_RATES[from]&&TRAD_RATES[from][to])return TRAD_RATES[from][to];const r=getRate(from,to);return r?r*0.96:null}
 function calcReceive(amt,from,to){const r=getRate(from,to);return r?amt*r:0}
@@ -1169,12 +1110,6 @@ function updateToCurrency(cur){
   else DEMO_TX.toCur=cur;
   render();
 }
-function setAmountMode(mode){amountMode=mode;if(!DEMO_TX){const u=getActiveSender();DEMO_TX={amount:500,fromCur:u.baseCur||"AED",toCur:"NGN",status:"pending",amountMode:mode,receiveAmount:null,scheduled:false,pricingCollapsed:true}}else{const rate=getRate(DEMO_TX.fromCur,DEMO_TX.toCur);if(mode==='receive'&&!DEMO_TX.receiveAmount){DEMO_TX.receiveAmount=Math.round(DEMO_TX.amount*rate)}else if(mode==='send'&&DEMO_TX.receiveAmount){DEMO_TX.amount=Math.round(DEMO_TX.receiveAmount/rate)}DEMO_TX.amountMode=mode}render()}
-function updateFromCurrency(cur){const u=getActiveSender();if(!DEMO_TX)DEMO_TX={amount:500,fromCur:cur,toCur:"NGN",status:"pending"};else DEMO_TX.fromCur=cur;render()}
-function updateSendAmountInput(val){const num=parseFloat(val)||0;const u=getActiveSender(),lim=getLimit(u.tier);if(!DEMO_TX){DEMO_TX={amount:num,fromCur:u.baseCur||"AED",toCur:"NGN",status:"pending",amountMode:"send"}}else{DEMO_TX.amount=num}if(DEMO_TX.amount<0)DEMO_TX.amount=0;if(DEMO_TX.amount>lim.perTx)DEMO_TX.amount=lim.perTx;render()}
-function updateReceiveAmountInput(val){const num=parseFloat(val)||0;if(!DEMO_TX)return;DEMO_TX.receiveAmount=num;const rate=getRate(DEMO_TX.fromCur,DEMO_TX.toCur);if(rate>0){DEMO_TX.amount=Math.round(num/rate)}render()}
-function togglePricingBreakdown(){pricingCollapsed=!pricingCollapsed;render()}
-function toggleRecipientSection(){recipientCollapsed=!recipientCollapsed;render()}
 function selectRecipient(id){
   const r=RECIPIENTS.find(x=>x.id===id);
   if(r){
@@ -1653,82 +1588,28 @@ const scheduleInput=DEMO_TX?.scheduled?'<div class="form-group"><label class="fo
 // FIX 3: Add "+ Invite New" button
 const inviteBtn='<button class="btn btn-sm btn-secondary" onclick="showInviteRecipientModal()" style="width:100%;margin-top:8px">+ Invite New Recipient</button>';
 
-// Change #2: Collapsed Recipient Selection
-const selectedRecipient=DEMO_TX?.recipient||null;
-const recipientHeader='<div style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg3);border-radius:8px;margin-bottom:'+(recipientCollapsed?'16px':'8px')+'" onclick="toggleRecipientSection()"><div style="display:flex;align-items:center;gap:10px">'+(selectedRecipient?'<span style="font-size:20px">'+selectedRecipient.flag+'</span><div><div style="font-weight:600;font-size:13px">'+selectedRecipient.name+'</div><div style="font-size:11px;color:var(--text2)">'+selectedRecipient.method+' • '+selectedRecipient.account+'</div></div>':'<span>👤 Select Recipient</span>')+'</div><span>'+(recipientCollapsed?'▼':'▲')+'</span></div>';
-const recipientList=recipientCollapsed?'':RECIPIENTS.slice(0,4).map(r=>'<div class="recipient-card'+(DEMO_TX?.recipient?.id===r.id?' selected':'')+'" onclick="selectRecipient(\''+r.id+'\');recipientCollapsed=true;render()"><div class="recipient-avatar" style="background:var(--bg4)">'+r.flag+'</div><div class="recipient-info"><div class="recipient-name">'+r.name+(r.pending?' <span class="badge badge-warning" style="font-size:9px">Pending</span>':'')+'</div><div class="recipient-detail">'+r.method+' • '+r.account+'</div></div></div>').join('')+(recipientCollapsed?'':inviteBtn);
-
 // FIX 5: Add peer-LP toggle
-
-// UI Enhancements
-const mode=DEMO_TX?.amountMode||amountMode||'send';
-const modeToggle='<div class="form-group"><label class="form-label">Amount Mode</label><div class="grid-2"><label class="schedule-option'+(mode==='send'?' active':'')+'"><input type="radio" name="amountMode" '+(mode==='send'?'checked':'')+' onclick="setAmountMode(\'send\')"><span>📤 I want to SEND</span></label><label class="schedule-option'+(mode==='receive'?' active':'')+'"><input type="radio" name="amountMode" onclick="setAmountMode(\'receive\')"><span>📥 Receiver gets</span></label></div></div>';
-
-// Mode-specific amounts and labels
-const primaryAmount=mode==='send'?amt:Math.round(recv);
-const primaryCur=mode==='send'?fromCur:toCur;
-const secondaryAmount=mode==='send'?recv:amt;
-const secondaryCur=mode==='send'?toCur:fromCur;
-const primaryLabel=mode==='send'?'You Send':'Receiver Gets';
-const secondaryLabel=mode==='send'?toCur+' received':'You need to send';
-
-// Unified amount field - make the big display editable
-const unifiedAmountField=mode==='send'?'<input type="number" class="form-input" value="'+amt+'" min="100" max="'+lim.perTx+'" step="50" onchange="updateSendAmountInput(this.value)" style="font-size:40px;font-weight:700;text-align:center;padding:20px;background:var(--bg3);border-radius:14px;margin-bottom:8px;font-family:inherit" placeholder="0">':'<input type="number" class="form-input" value="'+Math.round(recv)+'" min="0" step="100" onchange="updateReceiveAmountInput(this.value)" style="font-size:40px;font-weight:700;text-align:center;padding:20px;background:var(--bg3);border-radius:14px;margin-bottom:8px;font-family:inherit" placeholder="0">';
-const currencyLabel='<div style="text-align:center;font-size:18px;color:var(--text2);margin-top:-4px;margin-bottom:16px">'+primaryCur+'</div>';
-
-const fromCurSelector='<div class="form-group"><label class="form-label">From Currency</label><select class="form-select" onchange="updateFromCurrency(this.value)"><option value="AED"'+(fromCur==='AED'?' selected':'')+ '>🇦🇪 UAE Dirham (AED)</option><option value="USD"'+(fromCur==='USD'?' selected':'')+'>🇺🇸 US Dollar (USD)</option><option value="GBP"'+(fromCur==='GBP'?' selected':'')+'>🇬🇧 British Pound (GBP)</option><option value="EUR"'+(fromCur==='EUR'?' selected':'')+'>🇪🇺 Euro (EUR)</option></select></div>';
-
-
-const pricingHeader='<div style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg3);border-radius:8px;margin-top:12px" onclick="togglePricingBreakdown()"><span style="font-weight:600">💰 Total Fees: $'+fmt(pricing.totalFee,2)+' ('+fmt(pricing.effCostPct,2)+'%)</span><span>'+(pricingCollapsed?'▼':'▲')+'</span></div>';
-const pricingDetails=pricingCollapsed?'':'<div class="glass-card" style="padding:12px;margin-top:4px"><div class="revenue-breakdown"><div class="revenue-row"><span class="label">LP Fee</span><span class="value">$'+fmt(pricing.lpFee,2)+'</span></div><div class="revenue-row"><span class="label">Anchor Fee</span><span class="value">$'+fmt(pricing.anchorFee,2)+'</span></div><div class="revenue-row"><span class="label">FlowBridge Margin</span><span class="value">$'+fmt(pricing.fbMargin,2)+'</span></div></div><div style="font-size:10px;color:var(--green);margin-top:8px">✓ Still 5-10x cheaper than Western Union</div></div>';
-
 const peerLPSection='<div class="glass-card" style="margin-top:12px;padding:12px"><div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-weight:600;font-size:12px">Peer Liquidity Provider</div><div style="font-size:10px;color:var(--text2)">Provide liquidity in your corridors</div></div><label style="cursor:pointer"><input type="checkbox" '+(u.canProvideLiquidity?'checked':'')+' onchange="toggleUserAsLP()" style="width:auto;cursor:pointer"></label></div>'+(u.canProvideLiquidity?'<div style="font-size:10px;color:var(--green);margin-top:6px">✓ Active in: '+(u.lpCorridors||[]).join(', ')+'</div>':'')+'</div>';
 
-return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">💸 Send Money</div><span style="font-size:11px;color:var(--text2)">Sending as '+u.name+'</span></div><div class="send-form">'+modeToggle+fromCurSelector+'<div class="form-group"><label class="form-label">'+primaryLabel+'</label>'+unifiedAmountField+currencyLabel+'<input type="range" min="100" max="'+lim.perTx+'" step="50" value="'+amt+'" style="width:100%" onchange="updateSendAmount(this.value)">'+limitMsg+trustMsg+'</div><div class="form-group"><label class="form-label">To Country</label><select class="form-select" onchange="updateToCurrency(this.value)"><option value="NGN"'+(toCur==='NGN'?' selected':'')+'>🇳🇬 Nigeria (NGN)</option><option value="GHS"'+(toCur==='GHS'?' selected':'')+'>🇬🇭 Ghana (GHS)</option><option value="INR"'+(toCur==='INR'?' selected':'')+'>🇮🇳 India (INR)</option><option value="PHP"'+(toCur==='PHP'?' selected':'')+'>🇵🇭 Philippines (PHP)</option><option value="KES"'+(toCur==='KES'?' selected':'')+'>🇰🇪 Kenya (KES)</option><option value="ZWL"'+(toCur==='ZWL'?' selected':'')+'>🇿🇼 Zimbabwe (ZWL)</option><option value="MXN"'+(toCur==='MXN'?' selected':'')+'>🇲🇽 Mexico (MXN)</option></select></div><div class="rate-info"><span>Exchange Rate</span><span class="rate-value">1 '+fromCur+' = '+fmt(rate,2)+' '+toCur+'</span></div><div class="receive-amount"><span class="receive-flag">'+(CURRENCIES[secondaryCur]?.flag||'🌍')+'</span><div><div class="receive-value">'+fmt(secondaryAmount,2)+'</div><div class="receive-currency">'+secondaryLabel+'</div></div></div>'+pricingHeader+pricingDetails+'<div class="competitor-compare"><div class="title">Rate Comparison</div><div class="competitor-row best"><span class="name">⚡ FlowBridge</span><span class="rate">'+fmt(rate,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Wise</span><span class="rate">'+fmt(rate*0.988,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Western Union</span><span class="rate">'+fmt(rate*0.955,2)+' '+toCur+'</span></div><div class="competitor-row worst"><span class="name">Bank Wire</span><span class="rate">'+fmt(tradRate,2)+' '+toCur+'</span></div></div><div class="speed-compare"><div class="speed-item highlight"><div class="label">FlowBridge</div><div class="time">< 5 min</div></div><div class="speed-item"><div class="label">Traditional</div><div class="time">2-3 days</div></div></div>'+(savings>0?'<div class="savings-highlight"><div class="amount">+'+fmtCur(savings,toCur)+'</div><div class="label">You save vs bank wire</div></div>':'')+'<div class="form-group" style="margin-top:16px"><label class="form-label">Recipient</label>'+recipientHeader+recipientList+'</div><div class="form-group"><label class="form-label">Schedule</label><div class="grid-2"><label class="schedule-option'+((!DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" checked onclick="setSchedule(false)"><span>🚀 Send Now</span></label><label class="schedule-option'+((DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" onclick="setSchedule(true)"><span>⏰ Schedule</span></label></div></div>'+scheduleInput+peerLPSection+'<button class="btn btn-primary btn-lg" style="width:100%"'+(overLimit||overDaily?' disabled':'')+' onclick="submitSend('+amt+',\''+fromCur+'\',\''+toCur+'\')">Continue to FlowSwipe →</button></div></div>';
+return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">💸 Send Money</div><span style="font-size:11px;color:var(--text2)">Sending as '+u.name+'</span></div><div class="send-form"><div class="form-group"><label class="form-label">You Send</label><div class="amount-display"><span class="amount-value">'+fmt(amt,0)+'</span><span class="amount-currency">'+fromCur+'</span></div><input type="range" min="100" max="'+lim.perTx+'" step="50" value="'+amt+'" style="width:100%" onchange="updateSendAmount(this.value)">'+limitMsg+trustMsg+'</div><div class="form-group"><label class="form-label">To Country</label><select class="form-select" onchange="updateToCurrency(this.value)"><option value="NGN"'+(toCur==='NGN'?' selected':'')+'>🇳🇬 Nigeria (NGN)</option><option value="GHS"'+(toCur==='GHS'?' selected':'')+'>🇬🇭 Ghana (GHS)</option><option value="INR"'+(toCur==='INR'?' selected':'')+'>🇮🇳 India (INR)</option><option value="PHP"'+(toCur==='PHP'?' selected':'')+'>🇵🇭 Philippines (PHP)</option><option value="KES"'+(toCur==='KES'?' selected':'')+'>🇰🇪 Kenya (KES)</option><option value="ZWL"'+(toCur==='ZWL'?' selected':'')+'>🇿🇼 Zimbabwe (ZWL)</option><option value="MXN"'+(toCur==='MXN'?' selected':'')+'>🇲🇽 Mexico (MXN)</option></select></div><div class="rate-info"><span>Exchange Rate</span><span class="rate-value">1 '+fromCur+' = '+fmt(rate,2)+' '+toCur+'</span></div><div class="receive-amount"><span class="receive-flag">'+(CURRENCIES[toCur]?.flag||'🌍')+'</span><div><div class="receive-value">'+fmt(recv,2)+'</div><div class="receive-currency">'+toCur+' received</div></div></div>'+pricingBreakdown+'<div class="competitor-compare"><div class="title">Rate Comparison</div><div class="competitor-row best"><span class="name">⚡ FlowBridge</span><span class="rate">'+fmt(rate,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Wise</span><span class="rate">'+fmt(rate*0.988,2)+' '+toCur+'</span></div><div class="competitor-row"><span class="name">Western Union</span><span class="rate">'+fmt(rate*0.955,2)+' '+toCur+'</span></div><div class="competitor-row worst"><span class="name">Bank Wire</span><span class="rate">'+fmt(tradRate,2)+' '+toCur+'</span></div></div><div class="speed-compare"><div class="speed-item highlight"><div class="label">FlowBridge</div><div class="time">< 5 min</div></div><div class="speed-item"><div class="label">Traditional</div><div class="time">2-3 days</div></div></div>'+(savings>0?'<div class="savings-highlight"><div class="amount">+'+fmtCur(savings,toCur)+'</div><div class="label">You save vs bank wire</div></div>':'')+'<div class="form-group" style="margin-top:16px"><label class="form-label">Recipient</label>'+RECIPIENTS.slice(0,4).map(r=>'<div class="recipient-card'+(DEMO_TX?.recipient?.id===r.id?' selected':'')+'" onclick="selectRecipient(\''+r.id+'\')"><div class="recipient-avatar" style="background:var(--bg4)">'+r.flag+'</div><div class="recipient-info"><div class="recipient-name">'+r.name+(r.pending?' <span class="badge badge-warning" style="font-size:9px">Pending</span>':'')+'</div><div class="recipient-detail">'+r.method+' • '+r.account+'</div></div></div>').join('')+inviteBtn+'</div><div class="form-group"><label class="form-label">Schedule</label><div class="grid-2"><label class="schedule-option'+((!DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" checked onclick="setSchedule(false)"><span>🚀 Send Now</span></label><label class="schedule-option'+((DEMO_TX?.scheduled)?' active':'')+'"><input type="radio" name="schedule" onclick="setSchedule(true)"><span>⏰ Schedule</span></label></div></div>'+scheduleInput+peerLPSection+'<button class="btn btn-primary btn-lg" style="width:100%"'+(overLimit||overDaily?' disabled':'')+' onclick="submitSend('+amt+',\''+fromCur+'\',\''+toCur+'\')">Continue to FlowSwipe →</button></div></div>';
 }
 
 function renderSwipeView(){
-// Filter swipe cards by active corridor
+// BUG FIX 4: Filter swipe cards by active corridor
 let filteredSwipe=SWIPE;
 if(DEMO_TX&&DEMO_TX.fromCur&&DEMO_TX.toCur){
-  const targetCorridor=DEMO_TX.fromCur+'-'+DEMO_TX.toCur;
-  filteredSwipe=SWIPE.filter(card=>card.corridor===targetCorridor);
+  const targetCorridor=DEMO_TX.fromCur+'→'+DEMO_TX.toCur;
+  filteredSwipe=SWIPE.filter(card=>(card.from+'→'+card.to)===targetCorridor);
   if(filteredSwipe.length===0){
     // Fallback: show similar corridors (same toCur)
     filteredSwipe=SWIPE.filter(card=>card.to===DEMO_TX.toCur);
   }
 }
-if(swipeIndex>=filteredSwipe.length)return'<div class="card"><div class="empty-state"><div class="empty-icon">✨</div><div class="empty-title">All caught up!</div><div class="empty-text">'+(DEMO_TX&&DEMO_TX.fromCur&&DEMO_TX.toCur?'No more matches for '+DEMO_TX.fromCur+' → '+DEMO_TX.toCur+' corridor':'Check back later for new matches')+'</div><button class="btn btn-secondary" onclick="swipeIndex=0;render()">Reset Cards</button></div></div>';
+if(swipeIndex>=filteredSwipe.length)return'<div class="card"><div class="empty-state"><div class="empty-icon">✨</div><div class="empty-title">All caught up!</div><div class="empty-text">'+(DEMO_TX&&DEMO_TX.corridor?'No more matches for '+DEMO_TX.corridor+' corridor':'Check back later for new matches')+'</div><button class="btn btn-secondary" onclick="swipeIndex=0;render()">Reset Cards</button></div></div>';
 const cards=filteredSwipe.slice(swipeIndex,swipeIndex+3).reverse();
 const hl=guidedMode&&guidedStep===1&&!freeMode?' guided-highlight':'';
-const corridorMsg=DEMO_TX&&DEMO_TX.fromCur&&DEMO_TX.toCur?' <span class="badge badge-info" style="margin-left:8px">'+DEMO_TX.fromCur+' → '+DEMO_TX.toCur+'</span>':'';
-
-// Get FlowBridge benchmark rate for comparison
-const baseRate=DEMO_TX?getRate(DEMO_TX.fromCur,DEMO_TX.toCur):430;
-const sendAmount=DEMO_TX?DEMO_TX.amount:500;
-
-// Enhanced LP cards with rich metadata display
-return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">🔄 FlowSwipe'+corridorMsg+'</div><span class="badge badge-info">'+cards.length+' matches</span></div><div class="swipe-container" id="swipeContainer">'+cards.map((card,i)=>{
-  const zIdx=cards.length-i,scale=1-i*0.03,yOff=i*8;
-  
-  // Compute LP-specific rate (from card data or calculate)
-  const lpRate=card.lpRate||(baseRate*(1+(card.rateDeltaPct||0)/100));
-  const receiveAmount=sendAmount*lpRate;
-  
-  // Calculate vs FlowBridge comparison
-  const deltaPct=baseRate>0?((lpRate/baseRate-1)*100):0;
-  const spreadColor=deltaPct>0?'var(--green)':deltaPct<0?'var(--red)':'var(--text2)';
-  const spreadSign=deltaPct>=0?'+':'';
-  
-  // Reliability badge color
-  const reliabilityPct=card.reliability||90;
-  const reliabilityColor=reliabilityPct>=90?'var(--green)':reliabilityPct>=80?'var(--accent)':'var(--yellow)';
-  
-  // Badge hint display
-  const badgeHtml=card.badgeHint?'<span class="badge badge-info" style="font-size:9px;margin-left:6px">'+card.badgeHint+'</span>':'';
-  
-  return'<div class="swipe-card" id="card-'+card.id+'" style="z-index:'+zIdx+';transform:scale('+scale+') translateY('+yOff+'px)" data-id="'+card.id+'"><div class="header"><div class="user-info"><div class="avatar" style="background:'+card.avatar+'">'+card.name.charAt(0)+'</div><div><div class="name">'+card.name+badgeHtml+'</div><div class="location">'+card.flag+' '+card.city+'</div></div></div><span class="badge badge-success">'+card.score+' score</span></div><div class="amount-section"><div style="font-size:12px;color:var(--text2);margin-bottom:8px">You send '+fmtCur(sendAmount,card.from||card.corridor.split('-')[0])+'</div><div class="amount" style="color:var(--green)">→ '+fmtAmount(receiveAmount)+' '+(card.to||card.corridor.split('-')[1])+'</div><div style="font-size:11px;color:var(--text2);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:4px"><span>'+card.from+' → '+card.to+'</span><span style="color:'+spreadColor+';font-weight:600">'+spreadSign+fmt(deltaPct,2)+'% vs FlowBridge</span></div></div><div class="details"><div class="detail-item"><div class="detail-label">LP Rate</div><div class="detail-value" style="font-family:JetBrains Mono;font-size:12px;color:var(--green)">'+fmt(lpRate,3)+' '+(card.to||card.corridor.split('-')[1])+' / '+(card.from||card.corridor.split('-')[0])+'</div></div><div class="detail-item"><div class="detail-label">'+card.lpType+'</div><div class="detail-value" style="font-size:10px">'+card.proximity+'</div></div><div class="detail-item"><div class="detail-label">Reliability</div><div class="detail-value" style="color:'+reliabilityColor+'">'+reliabilityPct+'%</div></div><div class="detail-item"><div class="detail-label">Settlement</div><div class="detail-value">'+card.settlement+'</div></div></div><div style="margin-top:12px;padding:10px;background:var(--bg4);border-radius:8px;font-size:11px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text2)">City:</span><span style="color:var(--text)">'+card.city+'</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Type:</span><span style="color:var(--text)">'+card.lpType+'</span></div></div></div>'
-}).join('')+'</div><div class="swipe-actions"><button class="swipe-btn pass" onclick="swipePass()">✕</button><button class="swipe-btn match" onclick="swipeMatch()">✓</button></div><div class="swipe-hint">← Swipe left to pass • Swipe right to match →</div></div>';
+const corridorMsg=DEMO_TX&&DEMO_TX.corridor?' <span class="badge badge-info" style="margin-left:8px">'+DEMO_TX.corridor+'</span>':'';
+return'<div class="card'+hl+'"><div class="card-header"><div class="card-title">🔄 FlowSwipe'+corridorMsg+'</div><span class="badge badge-info">'+cards.length+' matches</span></div><div class="swipe-container" id="swipeContainer">'+cards.map((card,i)=>{const zIdx=cards.length-i,scale=1-i*0.03,yOff=i*8;const reliabilityColor=card.reliability==='Excellent'?'var(--green)':card.reliability==='High'?'var(--accent)':'var(--yellow)';return'<div class="swipe-card" id="card-'+card.id+'" style="z-index:'+zIdx+';transform:scale('+scale+') translateY('+yOff+'px)" data-id="'+card.id+'"><div class="header"><div class="user-info"><div class="avatar" style="background:'+card.avatar+'">'+card.name.charAt(0)+'</div><div><div class="name">'+card.name+'</div><div class="location">'+card.flag+' '+card.location+'</div></div></div><span class="badge badge-success">'+card.score+' score</span></div><div class="amount-section"><div class="amount">'+fmtCur(card.amount,card.from)+'</div><div class="conversion">→ '+fmt(card.amount*card.rate,0)+' '+card.to+'</div><div class="corridor-label">'+card.from+' → '+card.to+' corridor</div></div><div class="details"><div class="detail-item"><div class="detail-label">Rate</div><div class="detail-value">'+fmt(card.rate,2)+'</div></div><div class="detail-item"><div class="detail-label">Type</div><div class="detail-value" style="font-size:10px">'+card.lpType+'</div></div><div class="detail-item"><div class="detail-label">Reliability</div><div class="detail-value" style="color:'+reliabilityColor+'">'+card.reliability+'</div></div><div class="detail-item"><div class="detail-label">Settlement</div><div class="detail-value">'+card.time+'</div></div></div></div>'}).join('')+'</div><div class="swipe-actions"><button class="swipe-btn pass" onclick="swipePass()">✕</button><button class="swipe-btn match" onclick="swipeMatch()">✓</button></div><div class="swipe-hint">← Swipe left to pass • Swipe right to match →</div></div>';
 }
 
 function renderSenderHistory(){
@@ -1844,87 +1725,6 @@ function renderAdminTx(){
 const flagged=txHistory.filter(t=>t.pattern==='bilateral');
 const all=DEMO_TX?[DEMO_TX,...txHistory]:txHistory;
 return'<div class="card"><div class="card-header"><div class="card-title">📋 All Transactions</div><span class="badge badge-info">'+(all.length||0)+' total</span>'+(flagged.length?'<span class="badge badge-danger" style="margin-left:8px">'+flagged.length+' flagged</span>':'')+'<button class="btn btn-sm btn-secondary" onclick="showToast(\'Transactions exported\',\'success\')">📊 Export</button></div>'+(all.length?all.map(tx=>'<div class="tx-row'+(tx.pattern==='bilateral'?' suspicious':'')+'" onclick="'+(tx.pattern==='bilateral'?'showFraudReviewModal({id:\''+tx.id+'\'})':'showTxDetailModal({id:\''+tx.id+'\',amount:'+(tx.amount||500)+',fromCur:\''+(tx.fromCur||'AED')+'\',toCur:\''+(tx.toCur||'NGN')+'\',status:\''+(tx.status||'pending')+'\'})') +'"><div class="tx-icon" style="background:'+(tx.pattern==='bilateral'?'rgba(248,81,73,0.1)':'rgba(88,166,255,0.1)')+'">'+(tx.pattern==='bilateral'?'⚠️':(CURRENCIES[tx.toCur]?.flag||'💸'))+'</div><div class="tx-info"><div class="tx-title">'+tx.id+' <span class="badge badge-'+(tx.status==='completed'?'success':tx.status==='flagged'?'danger':'info')+'">'+(tx.status||'pending')+'</span>'+(tx.premium?' <span class="badge badge-premium">Premium</span>':'')+(tx.scheduled?' <span class="badge badge-scheduled">Scheduled</span>':'')+(tx.pattern==='bilateral'?' <span class="badge badge-collusion">Pattern Detected</span>':'')+'</div><div class="tx-detail">'+(tx.fromCur||tx.corridor||'AED→NGN')+' • '+(tx.timestamp?.toLocaleString()||'Just now')+'</div></div><div class="tx-amount"><div class="tx-value">'+fmtCur(tx.amount||500,tx.fromCur||tx.cur||'AED')+'</div>'+(tx.pattern==='bilateral'?'<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();showFraudReviewModal({id:\''+tx.id+'\'})">Review</button>':'')+'</div></div>').join(''):'<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No transactions yet</div></div>')+'</div>';
-}
-
-function renderAdminIssues(){
-  const openIssues  = ISSUES.filter(i => i.status === 'open');
-  const closedIssues = ISSUES.filter(i => i.status !== 'open');
-
-  const badgeClass = openIssues.length ? 'badge-danger' : 'badge-success';
-  const badgeLabel = openIssues.length
-    ? `${openIssues.length} open`
-    : 'All clear';
-
-  // If there are no issues at all, show a simple "all clear" card
-  if (!ISSUES.length) {
-    return `
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">➕ Issues & Escalations</div>
-          <span class="badge ${badgeClass}">${badgeLabel}</span>
-        </div>
-        <div class="card-body text-muted">
-          No issues raised yet. All transactions are running smoothly.
-        </div>
-      </div>
-    `;
-  }
-
-  const renderIssueRow = issue => {
-    const created = issue.createdAt
-      ? new Date(issue.createdAt).toLocaleString()
-      : '';
-    const statusClass =
-      issue.status === 'open'
-        ? 'badge-danger'
-        : issue.status === 'under_review'
-        ? 'badge-warning'
-        : 'badge-success';
-
-    return `
-      <div class="flex items-center justify-between mb-2">
-        <div>
-          <div class="font-semibold text-sm">
-            ${issue.reason || 'Issue'} · ${issue.txId || ''}
-          </div>
-          <div class="text-xs text-muted">
-            ${issue.raisedByRole || ''}${created ? ' • ' + created : ''}
-          </div>
-          ${issue.detail ? `<div class="text-xs mt-1">${issue.detail}</div>` : ''}
-        </div>
-        <div class="text-xs">
-          <span class="badge ${statusClass}">${issue.status}</span>
-        </div>
-      </div>
-    `;
-  };
-
-  const openBlock = openIssues.length
-    ? `
-      <h4 class="text-xs uppercase text-muted mb-1">Open</h4>
-      ${openIssues.map(renderIssueRow).join('')}
-    `
-    : '';
-
-  const closedBlock = closedIssues.length
-    ? `
-      <h4 class="text-xs uppercase text-muted mt-3 mb-1">Closed</h4>
-      ${closedIssues.map(renderIssueRow).join('')}
-    `
-    : '';
-
-  return `
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">➕ Issues & Escalations</div>
-        <span class="badge ${badgeClass}">${badgeLabel}</span>
-      </div>
-      <div class="card-body">
-        ${openBlock}
-        ${closedBlock}
-      </div>
-    </div>
-  `;
 }
 
 function renderAdminRevenue(){
